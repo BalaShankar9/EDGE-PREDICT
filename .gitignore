@@ -13,3 +13,4 @@ htmlcov/
 *.db
 data/cache/
 mlruns/
+models/
