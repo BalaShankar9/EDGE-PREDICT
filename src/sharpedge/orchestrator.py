@@ -24,6 +24,7 @@ from sharpedge.collectors.football_data_org import FootballDataOrgCollector
 from sharpedge.validation.schema import validate_schema
 from sharpedge.validation.statistical import validate_statistical
 from sharpedge.alerts.telegram import send_alert_sync
+from sharpedge.db.ingest import ingest_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +97,9 @@ def _validate_dataframe(
 
 
 def _run_collector(collector, **kwargs) -> CollectionResult:
-    """Execute a single collector with validation and alerting."""
+    """Execute a single collector with validation, persistence, and alerting."""
     source = collector.source_name
+    df = pd.DataFrame()
     try:
         df = collector.collect(**kwargs)
         result = _validate_dataframe(df, source)
@@ -106,6 +108,17 @@ def _run_collector(collector, **kwargs) -> CollectionResult:
         result = CollectionResult(
             source=source, rows=0, status="down", errors=[str(exc)],
         )
+
+    # Persist valid data to database
+    if result.status != "down" and not df.empty:
+        try:
+            persisted = ingest_dataframe(df, source)
+            logger.info(f"[{source}] Persisted {persisted} new rows to database")
+        except Exception as exc:
+            logger.error(f"[{source}] Ingestion error: {exc}")
+            result.errors.append(f"Ingestion failed: {exc}")
+            if result.status == "healthy":
+                result.status = "degraded"
 
     if result.status == "down":
         try:
