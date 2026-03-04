@@ -15,6 +15,18 @@ class Settings(BaseSettings):
     # Data directories
     cache_dir: str = "data/cache"
 
+    # API settings
+    api_key: str = ""
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+
+    # Telegram bot settings
+    telegram_channel_id: str = ""
+    telegram_poll_interval: int = 60
+
+    # Model settings
+    model_path: str = "models/latest.pkl"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
