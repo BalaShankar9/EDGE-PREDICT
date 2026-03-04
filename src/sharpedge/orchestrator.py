@@ -17,6 +17,10 @@ from sharpedge.collectors.understat import UnderstatCollector
 from sharpedge.collectors.fbref import FBrefCollector
 from sharpedge.collectors.forebet import ForebetCollector
 from sharpedge.collectors.open_meteo import OpenMeteoCollector
+from sharpedge.collectors.predictz import PredictZCollector
+from sharpedge.collectors.windrawwin import WinDrawWinCollector
+from sharpedge.collectors.footystats import FootyStatsCollector
+from sharpedge.collectors.football_data_org import FootballDataOrgCollector
 from sharpedge.validation.schema import validate_schema
 from sharpedge.validation.statistical import validate_statistical
 from sharpedge.alerts.telegram import send_alert_sync
@@ -33,6 +37,10 @@ _SOURCE_TYPE_MAP: dict[str, str] = {
     "understat": "xg",
     "fbref": "match",
     "forebet": "prediction",
+    "predictz": "prediction",
+    "windrawwin": "prediction",
+    "footystats": "prediction",
+    "football_data_org": "match",
     "open_meteo": "match",  # weather data doesn't have its own schema
 }
 
@@ -120,7 +128,11 @@ def run_daily_collection() -> list[CollectionResult]:
     3. Understat (xG data)
     4. FBref (advanced stats)
     5. Forebet (predictions)
-    6. Open-Meteo (weather — requires match venues)
+    6. PredictZ (predictions)
+    7. WinDrawWin (predictions)
+    8. FootyStats (stats + predictions)
+    9. football-data.org (fixtures + standings)
+    10. Open-Meteo (weather — requires match venues)
 
     Returns
     -------
@@ -134,6 +146,10 @@ def run_daily_collection() -> list[CollectionResult]:
         (UnderstatCollector(), {}),
         (FBrefCollector(), {}),
         (ForebetCollector(), {}),
+        (PredictZCollector(), {}),
+        (WinDrawWinCollector(), {}),
+        (FootyStatsCollector(), {}),
+        (FootballDataOrgCollector(), {}),
         (OpenMeteoCollector(), {}),
     ]
 
