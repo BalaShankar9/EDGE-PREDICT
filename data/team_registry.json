@@ -1,0 +1,1730 @@
+{
+  "arsenal": {
+    "canonical": "Arsenal",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Arsenal",
+      "fbref": "Arsenal",
+      "understat": "Arsenal",
+      "forebet": "Arsenal",
+      "predictz": "Arsenal",
+      "windrawwin": "Arsenal",
+      "oddsportal": "Arsenal",
+      "transfermarkt": "Arsenal FC",
+      "clubelo": "Arsenal",
+      "sofascore": "Arsenal",
+      "footystats": "Arsenal"
+    }
+  },
+  "aston_villa": {
+    "canonical": "Aston Villa",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Aston Villa",
+      "fbref": "Aston Villa",
+      "understat": "Aston Villa",
+      "forebet": "Aston Villa",
+      "predictz": "Aston Villa",
+      "windrawwin": "Aston Villa",
+      "oddsportal": "Aston Villa",
+      "transfermarkt": "Aston Villa",
+      "clubelo": "Aston Villa",
+      "sofascore": "Aston Villa",
+      "footystats": "Aston Villa"
+    }
+  },
+  "bournemouth": {
+    "canonical": "AFC Bournemouth",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Bournemouth",
+      "fbref": "Bournemouth",
+      "understat": "Bournemouth",
+      "forebet": "Bournemouth",
+      "predictz": "Bournemouth",
+      "windrawwin": "Bournemouth",
+      "oddsportal": "Bournemouth",
+      "transfermarkt": "AFC Bournemouth",
+      "clubelo": "Bournemouth",
+      "sofascore": "Bournemouth",
+      "footystats": "AFC Bournemouth"
+    }
+  },
+  "brentford": {
+    "canonical": "Brentford",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Brentford",
+      "fbref": "Brentford",
+      "understat": "Brentford",
+      "forebet": "Brentford",
+      "predictz": "Brentford",
+      "windrawwin": "Brentford",
+      "oddsportal": "Brentford",
+      "transfermarkt": "Brentford FC",
+      "clubelo": "Brentford",
+      "sofascore": "Brentford",
+      "footystats": "Brentford"
+    }
+  },
+  "brighton": {
+    "canonical": "Brighton & Hove Albion",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Brighton",
+      "fbref": "Brighton & Hove Albion",
+      "understat": "Brighton and Hove Albion",
+      "forebet": "Brighton",
+      "predictz": "Brighton",
+      "windrawwin": "Brighton",
+      "oddsportal": "Brighton",
+      "transfermarkt": "Brighton & Hove Albion",
+      "clubelo": "Brighton",
+      "sofascore": "Brighton",
+      "footystats": "Brighton and Hove Albion"
+    }
+  },
+  "chelsea": {
+    "canonical": "Chelsea",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Chelsea",
+      "fbref": "Chelsea",
+      "understat": "Chelsea",
+      "forebet": "Chelsea",
+      "predictz": "Chelsea",
+      "windrawwin": "Chelsea",
+      "oddsportal": "Chelsea",
+      "transfermarkt": "Chelsea FC",
+      "clubelo": "Chelsea",
+      "sofascore": "Chelsea",
+      "footystats": "Chelsea"
+    }
+  },
+  "crystal_palace": {
+    "canonical": "Crystal Palace",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Crystal Palace",
+      "fbref": "Crystal Palace",
+      "understat": "Crystal Palace",
+      "forebet": "Crystal Palace",
+      "predictz": "Crystal Palace",
+      "windrawwin": "Crystal Palace",
+      "oddsportal": "Crystal Palace",
+      "transfermarkt": "Crystal Palace",
+      "clubelo": "Crystal Palace",
+      "sofascore": "Crystal Palace",
+      "footystats": "Crystal Palace"
+    }
+  },
+  "everton": {
+    "canonical": "Everton",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Everton",
+      "fbref": "Everton",
+      "understat": "Everton",
+      "forebet": "Everton",
+      "predictz": "Everton",
+      "windrawwin": "Everton",
+      "oddsportal": "Everton",
+      "transfermarkt": "Everton FC",
+      "clubelo": "Everton",
+      "sofascore": "Everton",
+      "footystats": "Everton"
+    }
+  },
+  "fulham": {
+    "canonical": "Fulham",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Fulham",
+      "fbref": "Fulham",
+      "understat": "Fulham",
+      "forebet": "Fulham",
+      "predictz": "Fulham",
+      "windrawwin": "Fulham",
+      "oddsportal": "Fulham",
+      "transfermarkt": "Fulham FC",
+      "clubelo": "Fulham",
+      "sofascore": "Fulham",
+      "footystats": "Fulham"
+    }
+  },
+  "ipswich": {
+    "canonical": "Ipswich Town",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Ipswich",
+      "fbref": "Ipswich Town",
+      "understat": "Ipswich Town",
+      "forebet": "Ipswich",
+      "predictz": "Ipswich",
+      "windrawwin": "Ipswich",
+      "oddsportal": "Ipswich Town",
+      "transfermarkt": "Ipswich Town",
+      "clubelo": "Ipswich",
+      "sofascore": "Ipswich Town",
+      "footystats": "Ipswich Town"
+    }
+  },
+  "leicester": {
+    "canonical": "Leicester City",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Leicester",
+      "fbref": "Leicester City",
+      "understat": "Leicester City",
+      "forebet": "Leicester",
+      "predictz": "Leicester",
+      "windrawwin": "Leicester",
+      "oddsportal": "Leicester",
+      "transfermarkt": "Leicester City",
+      "clubelo": "Leicester",
+      "sofascore": "Leicester City",
+      "footystats": "Leicester City"
+    }
+  },
+  "liverpool": {
+    "canonical": "Liverpool",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Liverpool",
+      "fbref": "Liverpool",
+      "understat": "Liverpool",
+      "forebet": "Liverpool",
+      "predictz": "Liverpool",
+      "windrawwin": "Liverpool",
+      "oddsportal": "Liverpool",
+      "transfermarkt": "Liverpool FC",
+      "clubelo": "Liverpool",
+      "sofascore": "Liverpool",
+      "footystats": "Liverpool"
+    }
+  },
+  "manchester_city": {
+    "canonical": "Manchester City",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Man City",
+      "fbref": "Manchester City",
+      "understat": "Manchester City",
+      "forebet": "Man. City",
+      "predictz": "Man City",
+      "windrawwin": "Man City",
+      "oddsportal": "Manchester City",
+      "transfermarkt": "Manchester City",
+      "clubelo": "Man City",
+      "sofascore": "Manchester City",
+      "footystats": "Manchester City"
+    }
+  },
+  "manchester_united": {
+    "canonical": "Manchester United",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Man United",
+      "fbref": "Manchester Utd",
+      "understat": "Manchester United",
+      "forebet": "Man. United",
+      "predictz": "Man United",
+      "windrawwin": "Man United",
+      "oddsportal": "Manchester United",
+      "transfermarkt": "Manchester United",
+      "clubelo": "Man United",
+      "sofascore": "Manchester United",
+      "footystats": "Manchester United"
+    }
+  },
+  "newcastle": {
+    "canonical": "Newcastle United",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Newcastle",
+      "fbref": "Newcastle Utd",
+      "understat": "Newcastle United",
+      "forebet": "Newcastle",
+      "predictz": "Newcastle",
+      "windrawwin": "Newcastle",
+      "oddsportal": "Newcastle United",
+      "transfermarkt": "Newcastle United",
+      "clubelo": "Newcastle",
+      "sofascore": "Newcastle United",
+      "footystats": "Newcastle United"
+    }
+  },
+  "nottingham_forest": {
+    "canonical": "Nottingham Forest",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Nott'm Forest",
+      "fbref": "Nottingham Forest",
+      "understat": "Nottingham Forest",
+      "forebet": "Nott. Forest",
+      "predictz": "Nott'm Forest",
+      "windrawwin": "Nott'm Forest",
+      "oddsportal": "Nottingham Forest",
+      "transfermarkt": "Nottingham Forest",
+      "clubelo": "Nott'm Forest",
+      "sofascore": "Nottingham Forest",
+      "footystats": "Nottingham Forest"
+    }
+  },
+  "southampton": {
+    "canonical": "Southampton",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Southampton",
+      "fbref": "Southampton",
+      "understat": "Southampton",
+      "forebet": "Southampton",
+      "predictz": "Southampton",
+      "windrawwin": "Southampton",
+      "oddsportal": "Southampton",
+      "transfermarkt": "Southampton FC",
+      "clubelo": "Southampton",
+      "sofascore": "Southampton",
+      "footystats": "Southampton"
+    }
+  },
+  "tottenham": {
+    "canonical": "Tottenham Hotspur",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Tottenham",
+      "fbref": "Tottenham Hotspur",
+      "understat": "Tottenham",
+      "forebet": "Tottenham",
+      "predictz": "Tottenham",
+      "windrawwin": "Tottenham",
+      "oddsportal": "Tottenham",
+      "transfermarkt": "Tottenham Hotspur",
+      "clubelo": "Tottenham",
+      "sofascore": "Tottenham",
+      "footystats": "Tottenham Hotspur"
+    }
+  },
+  "west_ham": {
+    "canonical": "West Ham United",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "West Ham",
+      "fbref": "West Ham United",
+      "understat": "West Ham United",
+      "forebet": "West Ham",
+      "predictz": "West Ham",
+      "windrawwin": "West Ham",
+      "oddsportal": "West Ham",
+      "transfermarkt": "West Ham United",
+      "clubelo": "West Ham",
+      "sofascore": "West Ham United",
+      "footystats": "West Ham United"
+    }
+  },
+  "wolves": {
+    "canonical": "Wolverhampton Wanderers",
+    "country": "England",
+    "league": "Premier League",
+    "aliases": {
+      "football_data_uk": "Wolves",
+      "fbref": "Wolverhampton Wanderers",
+      "understat": "Wolverhampton Wanderers",
+      "forebet": "Wolverhampton",
+      "predictz": "Wolves",
+      "windrawwin": "Wolves",
+      "oddsportal": "Wolverhampton",
+      "transfermarkt": "Wolverhampton Wanderers",
+      "clubelo": "Wolves",
+      "sofascore": "Wolverhampton",
+      "footystats": "Wolverhampton Wanderers"
+    }
+  },
+  "atletico_madrid": {
+    "canonical": "Atletico Madrid",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Ath Madrid",
+      "fbref": "Atletico Madrid",
+      "understat": "Atletico Madrid",
+      "forebet": "Atl. Madrid",
+      "predictz": "Atletico Madrid",
+      "windrawwin": "Atletico Madrid",
+      "oddsportal": "Atletico Madrid",
+      "transfermarkt": "Atlético de Madrid",
+      "clubelo": "Atletico Madrid",
+      "sofascore": "Atlético Madrid",
+      "footystats": "Atletico Madrid"
+    }
+  },
+  "athletic_bilbao": {
+    "canonical": "Athletic Bilbao",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Ath Bilbao",
+      "fbref": "Athletic Club",
+      "understat": "Athletic Club",
+      "forebet": "Ath. Bilbao",
+      "predictz": "Ath Bilbao",
+      "windrawwin": "Athletic Bilbao",
+      "oddsportal": "Athletic Bilbao",
+      "transfermarkt": "Athletic Bilbao",
+      "clubelo": "Athletic Bilbao",
+      "sofascore": "Athletic Club",
+      "footystats": "Athletic Club"
+    }
+  },
+  "barcelona": {
+    "canonical": "Barcelona",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Barcelona",
+      "fbref": "Barcelona",
+      "understat": "Barcelona",
+      "forebet": "Barcelona",
+      "predictz": "Barcelona",
+      "windrawwin": "Barcelona",
+      "oddsportal": "Barcelona",
+      "transfermarkt": "FC Barcelona",
+      "clubelo": "Barcelona",
+      "sofascore": "Barcelona",
+      "footystats": "FC Barcelona"
+    }
+  },
+  "real_betis": {
+    "canonical": "Real Betis",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Betis",
+      "fbref": "Real Betis",
+      "understat": "Real Betis",
+      "forebet": "Betis",
+      "predictz": "Betis",
+      "windrawwin": "Real Betis",
+      "oddsportal": "Real Betis",
+      "transfermarkt": "Real Betis Balompié",
+      "clubelo": "Real Betis",
+      "sofascore": "Real Betis",
+      "footystats": "Real Betis"
+    }
+  },
+  "celta_vigo": {
+    "canonical": "Celta Vigo",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Celta",
+      "fbref": "Celta Vigo",
+      "understat": "Celta Vigo",
+      "forebet": "Celta Vigo",
+      "predictz": "Celta Vigo",
+      "windrawwin": "Celta Vigo",
+      "oddsportal": "Celta Vigo",
+      "transfermarkt": "Celta de Vigo",
+      "clubelo": "Celta Vigo",
+      "sofascore": "RC Celta",
+      "footystats": "Celta de Vigo"
+    }
+  },
+  "espanyol": {
+    "canonical": "Espanyol",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Espanyol",
+      "fbref": "Espanyol",
+      "understat": "Espanyol",
+      "forebet": "Espanyol",
+      "predictz": "Espanyol",
+      "windrawwin": "Espanyol",
+      "oddsportal": "Espanyol",
+      "transfermarkt": "RCD Espanyol",
+      "clubelo": "Espanyol",
+      "sofascore": "Espanyol",
+      "footystats": "RCD Espanyol"
+    }
+  },
+  "getafe": {
+    "canonical": "Getafe",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Getafe",
+      "fbref": "Getafe",
+      "understat": "Getafe",
+      "forebet": "Getafe",
+      "predictz": "Getafe",
+      "windrawwin": "Getafe",
+      "oddsportal": "Getafe",
+      "transfermarkt": "Getafe CF",
+      "clubelo": "Getafe",
+      "sofascore": "Getafe",
+      "footystats": "Getafe CF"
+    }
+  },
+  "girona": {
+    "canonical": "Girona",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Girona",
+      "fbref": "Girona",
+      "understat": "Girona",
+      "forebet": "Girona",
+      "predictz": "Girona",
+      "windrawwin": "Girona",
+      "oddsportal": "Girona",
+      "transfermarkt": "Girona FC",
+      "clubelo": "Girona",
+      "sofascore": "Girona",
+      "footystats": "Girona FC"
+    }
+  },
+  "las_palmas": {
+    "canonical": "Las Palmas",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Las Palmas",
+      "fbref": "Las Palmas",
+      "understat": "Las Palmas",
+      "forebet": "Las Palmas",
+      "predictz": "Las Palmas",
+      "windrawwin": "Las Palmas",
+      "oddsportal": "Las Palmas",
+      "transfermarkt": "UD Las Palmas",
+      "clubelo": "Las Palmas",
+      "sofascore": "Las Palmas",
+      "footystats": "UD Las Palmas"
+    }
+  },
+  "leganes": {
+    "canonical": "Leganes",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Leganes",
+      "fbref": "Leganes",
+      "understat": "Leganes",
+      "forebet": "Leganes",
+      "predictz": "Leganes",
+      "windrawwin": "Leganes",
+      "oddsportal": "Leganes",
+      "transfermarkt": "CD Leganés",
+      "clubelo": "Leganes",
+      "sofascore": "Leganés",
+      "footystats": "CD Leganés"
+    }
+  },
+  "mallorca": {
+    "canonical": "Mallorca",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Mallorca",
+      "fbref": "Mallorca",
+      "understat": "Mallorca",
+      "forebet": "Mallorca",
+      "predictz": "Mallorca",
+      "windrawwin": "Mallorca",
+      "oddsportal": "Mallorca",
+      "transfermarkt": "RCD Mallorca",
+      "clubelo": "Mallorca",
+      "sofascore": "Mallorca",
+      "footystats": "RCD Mallorca"
+    }
+  },
+  "osasuna": {
+    "canonical": "Osasuna",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Osasuna",
+      "fbref": "Osasuna",
+      "understat": "Osasuna",
+      "forebet": "Osasuna",
+      "predictz": "Osasuna",
+      "windrawwin": "Osasuna",
+      "oddsportal": "Osasuna",
+      "transfermarkt": "CA Osasuna",
+      "clubelo": "Osasuna",
+      "sofascore": "Osasuna",
+      "footystats": "CA Osasuna"
+    }
+  },
+  "rayo_vallecano": {
+    "canonical": "Rayo Vallecano",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Rayo Vallecano",
+      "fbref": "Rayo Vallecano",
+      "understat": "Rayo Vallecano",
+      "forebet": "Rayo Vallecano",
+      "predictz": "Rayo Vallecano",
+      "windrawwin": "Rayo Vallecano",
+      "oddsportal": "Rayo Vallecano",
+      "transfermarkt": "Rayo Vallecano",
+      "clubelo": "Rayo Vallecano",
+      "sofascore": "Rayo Vallecano",
+      "footystats": "Rayo Vallecano"
+    }
+  },
+  "real_madrid": {
+    "canonical": "Real Madrid",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Real Madrid",
+      "fbref": "Real Madrid",
+      "understat": "Real Madrid",
+      "forebet": "Real Madrid",
+      "predictz": "Real Madrid",
+      "windrawwin": "Real Madrid",
+      "oddsportal": "Real Madrid",
+      "transfermarkt": "Real Madrid CF",
+      "clubelo": "Real Madrid",
+      "sofascore": "Real Madrid",
+      "footystats": "Real Madrid CF"
+    }
+  },
+  "real_sociedad": {
+    "canonical": "Real Sociedad",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Real Sociedad",
+      "fbref": "Real Sociedad",
+      "understat": "Real Sociedad",
+      "forebet": "Real Sociedad",
+      "predictz": "Real Sociedad",
+      "windrawwin": "Real Sociedad",
+      "oddsportal": "Real Sociedad",
+      "transfermarkt": "Real Sociedad",
+      "clubelo": "Real Sociedad",
+      "sofascore": "Real Sociedad",
+      "footystats": "Real Sociedad"
+    }
+  },
+  "real_valladolid": {
+    "canonical": "Real Valladolid",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Valladolid",
+      "fbref": "Real Valladolid",
+      "understat": "Real Valladolid",
+      "forebet": "Valladolid",
+      "predictz": "Valladolid",
+      "windrawwin": "Valladolid",
+      "oddsportal": "Real Valladolid",
+      "transfermarkt": "Real Valladolid CF",
+      "clubelo": "Valladolid",
+      "sofascore": "Real Valladolid",
+      "footystats": "Real Valladolid"
+    }
+  },
+  "sevilla": {
+    "canonical": "Sevilla",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Sevilla",
+      "fbref": "Sevilla",
+      "understat": "Sevilla",
+      "forebet": "Sevilla",
+      "predictz": "Sevilla",
+      "windrawwin": "Sevilla",
+      "oddsportal": "Sevilla",
+      "transfermarkt": "Sevilla FC",
+      "clubelo": "Sevilla",
+      "sofascore": "Sevilla",
+      "footystats": "Sevilla FC"
+    }
+  },
+  "valencia": {
+    "canonical": "Valencia",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Valencia",
+      "fbref": "Valencia",
+      "understat": "Valencia",
+      "forebet": "Valencia",
+      "predictz": "Valencia",
+      "windrawwin": "Valencia",
+      "oddsportal": "Valencia",
+      "transfermarkt": "Valencia CF",
+      "clubelo": "Valencia",
+      "sofascore": "Valencia",
+      "footystats": "Valencia CF"
+    }
+  },
+  "villarreal": {
+    "canonical": "Villarreal",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Villarreal",
+      "fbref": "Villarreal",
+      "understat": "Villarreal",
+      "forebet": "Villarreal",
+      "predictz": "Villarreal",
+      "windrawwin": "Villarreal",
+      "oddsportal": "Villarreal",
+      "transfermarkt": "Villarreal CF",
+      "clubelo": "Villarreal",
+      "sofascore": "Villarreal",
+      "footystats": "Villarreal CF"
+    }
+  },
+  "alaves": {
+    "canonical": "Alaves",
+    "country": "Spain",
+    "league": "La Liga",
+    "aliases": {
+      "football_data_uk": "Alaves",
+      "fbref": "Alaves",
+      "understat": "Alaves",
+      "forebet": "Alaves",
+      "predictz": "Alaves",
+      "windrawwin": "Alaves",
+      "oddsportal": "Alaves",
+      "transfermarkt": "Deportivo Alavés",
+      "clubelo": "Alaves",
+      "sofascore": "Alavés",
+      "footystats": "Deportivo Alavés"
+    }
+  },
+  "bayern_munich": {
+    "canonical": "Bayern Munich",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Bayern Munich",
+      "fbref": "Bayern Munich",
+      "understat": "Bayern Munich",
+      "forebet": "Bayern Munich",
+      "predictz": "Bayern Munich",
+      "windrawwin": "Bayern Munich",
+      "oddsportal": "Bayern Munich",
+      "transfermarkt": "FC Bayern München",
+      "clubelo": "Bayern Munich",
+      "sofascore": "Bayern München",
+      "footystats": "FC Bayern Munich"
+    }
+  },
+  "bayer_leverkusen": {
+    "canonical": "Bayer Leverkusen",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Leverkusen",
+      "fbref": "Bayer Leverkusen",
+      "understat": "Bayer Leverkusen",
+      "forebet": "B. Leverkusen",
+      "predictz": "Leverkusen",
+      "windrawwin": "Bayer Leverkusen",
+      "oddsportal": "Bayer Leverkusen",
+      "transfermarkt": "Bayer 04 Leverkusen",
+      "clubelo": "Leverkusen",
+      "sofascore": "Bayer Leverkusen",
+      "footystats": "Bayer 04 Leverkusen"
+    }
+  },
+  "borussia_dortmund": {
+    "canonical": "Borussia Dortmund",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Dortmund",
+      "fbref": "Borussia Dortmund",
+      "understat": "Borussia Dortmund",
+      "forebet": "Dortmund",
+      "predictz": "Dortmund",
+      "windrawwin": "Dortmund",
+      "oddsportal": "Borussia Dortmund",
+      "transfermarkt": "Borussia Dortmund",
+      "clubelo": "Dortmund",
+      "sofascore": "Borussia Dortmund",
+      "footystats": "Borussia Dortmund"
+    }
+  },
+  "rb_leipzig": {
+    "canonical": "RB Leipzig",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "RB Leipzig",
+      "fbref": "RB Leipzig",
+      "understat": "RB Leipzig",
+      "forebet": "RB Leipzig",
+      "predictz": "RB Leipzig",
+      "windrawwin": "RB Leipzig",
+      "oddsportal": "RB Leipzig",
+      "transfermarkt": "RB Leipzig",
+      "clubelo": "RB Leipzig",
+      "sofascore": "RB Leipzig",
+      "footystats": "RasenBallsport Leipzig"
+    }
+  },
+  "eintracht_frankfurt": {
+    "canonical": "Eintracht Frankfurt",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Frankfurt",
+      "fbref": "Eintracht Frankfurt",
+      "understat": "Eintracht Frankfurt",
+      "forebet": "E. Frankfurt",
+      "predictz": "Frankfurt",
+      "windrawwin": "Frankfurt",
+      "oddsportal": "Eintracht Frankfurt",
+      "transfermarkt": "Eintracht Frankfurt",
+      "clubelo": "Frankfurt",
+      "sofascore": "Eintracht Frankfurt",
+      "footystats": "Eintracht Frankfurt"
+    }
+  },
+  "borussia_mgladbach": {
+    "canonical": "Borussia Monchengladbach",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "M'gladbach",
+      "fbref": "Borussia Mönchengladbach",
+      "understat": "Borussia M.Gladbach",
+      "forebet": "B. Monchengladbach",
+      "predictz": "M'gladbach",
+      "windrawwin": "M'gladbach",
+      "oddsportal": "Borussia Monchengladbach",
+      "transfermarkt": "Borussia Mönchengladbach",
+      "clubelo": "M'gladbach",
+      "sofascore": "Borussia Mönchengladbach",
+      "footystats": "Borussia Mönchengladbach"
+    }
+  },
+  "freiburg": {
+    "canonical": "SC Freiburg",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Freiburg",
+      "fbref": "Freiburg",
+      "understat": "Freiburg",
+      "forebet": "Freiburg",
+      "predictz": "Freiburg",
+      "windrawwin": "Freiburg",
+      "oddsportal": "Freiburg",
+      "transfermarkt": "SC Freiburg",
+      "clubelo": "Freiburg",
+      "sofascore": "Freiburg",
+      "footystats": "SC Freiburg"
+    }
+  },
+  "vfb_stuttgart": {
+    "canonical": "VfB Stuttgart",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Stuttgart",
+      "fbref": "VfB Stuttgart",
+      "understat": "VfB Stuttgart",
+      "forebet": "Stuttgart",
+      "predictz": "Stuttgart",
+      "windrawwin": "Stuttgart",
+      "oddsportal": "VfB Stuttgart",
+      "transfermarkt": "VfB Stuttgart",
+      "clubelo": "Stuttgart",
+      "sofascore": "VfB Stuttgart",
+      "footystats": "VfB Stuttgart"
+    }
+  },
+  "wolfsburg": {
+    "canonical": "VfL Wolfsburg",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Wolfsburg",
+      "fbref": "Wolfsburg",
+      "understat": "Wolfsburg",
+      "forebet": "Wolfsburg",
+      "predictz": "Wolfsburg",
+      "windrawwin": "Wolfsburg",
+      "oddsportal": "Wolfsburg",
+      "transfermarkt": "VfL Wolfsburg",
+      "clubelo": "Wolfsburg",
+      "sofascore": "VfL Wolfsburg",
+      "footystats": "VfL Wolfsburg"
+    }
+  },
+  "union_berlin": {
+    "canonical": "Union Berlin",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Union Berlin",
+      "fbref": "Union Berlin",
+      "understat": "Union Berlin",
+      "forebet": "Union Berlin",
+      "predictz": "Union Berlin",
+      "windrawwin": "Union Berlin",
+      "oddsportal": "Union Berlin",
+      "transfermarkt": "1. FC Union Berlin",
+      "clubelo": "Union Berlin",
+      "sofascore": "Union Berlin",
+      "footystats": "1. FC Union Berlin"
+    }
+  },
+  "werder_bremen": {
+    "canonical": "Werder Bremen",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Werder Bremen",
+      "fbref": "Werder Bremen",
+      "understat": "Werder Bremen",
+      "forebet": "W. Bremen",
+      "predictz": "Werder Bremen",
+      "windrawwin": "Werder Bremen",
+      "oddsportal": "Werder Bremen",
+      "transfermarkt": "SV Werder Bremen",
+      "clubelo": "Werder Bremen",
+      "sofascore": "Werder Bremen",
+      "footystats": "SV Werder Bremen"
+    }
+  },
+  "hoffenheim": {
+    "canonical": "TSG Hoffenheim",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Hoffenheim",
+      "fbref": "Hoffenheim",
+      "understat": "Hoffenheim",
+      "forebet": "Hoffenheim",
+      "predictz": "Hoffenheim",
+      "windrawwin": "Hoffenheim",
+      "oddsportal": "Hoffenheim",
+      "transfermarkt": "TSG 1899 Hoffenheim",
+      "clubelo": "Hoffenheim",
+      "sofascore": "TSG Hoffenheim",
+      "footystats": "TSG 1899 Hoffenheim"
+    }
+  },
+  "mainz": {
+    "canonical": "Mainz 05",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Mainz",
+      "fbref": "Mainz 05",
+      "understat": "Mainz 05",
+      "forebet": "Mainz",
+      "predictz": "Mainz",
+      "windrawwin": "Mainz",
+      "oddsportal": "Mainz",
+      "transfermarkt": "1. FSV Mainz 05",
+      "clubelo": "Mainz",
+      "sofascore": "Mainz 05",
+      "footystats": "1. FSV Mainz 05"
+    }
+  },
+  "augsburg": {
+    "canonical": "FC Augsburg",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Augsburg",
+      "fbref": "Augsburg",
+      "understat": "Augsburg",
+      "forebet": "Augsburg",
+      "predictz": "Augsburg",
+      "windrawwin": "Augsburg",
+      "oddsportal": "Augsburg",
+      "transfermarkt": "FC Augsburg",
+      "clubelo": "Augsburg",
+      "sofascore": "Augsburg",
+      "footystats": "FC Augsburg"
+    }
+  },
+  "heidenheim": {
+    "canonical": "FC Heidenheim",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Heidenheim",
+      "fbref": "Heidenheim",
+      "understat": "Heidenheim",
+      "forebet": "Heidenheim",
+      "predictz": "Heidenheim",
+      "windrawwin": "Heidenheim",
+      "oddsportal": "Heidenheim",
+      "transfermarkt": "1. FC Heidenheim 1846",
+      "clubelo": "Heidenheim",
+      "sofascore": "Heidenheim",
+      "footystats": "1. FC Heidenheim"
+    }
+  },
+  "bochum": {
+    "canonical": "VfL Bochum",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Bochum",
+      "fbref": "Bochum",
+      "understat": "Bochum",
+      "forebet": "Bochum",
+      "predictz": "Bochum",
+      "windrawwin": "Bochum",
+      "oddsportal": "Bochum",
+      "transfermarkt": "VfL Bochum",
+      "clubelo": "Bochum",
+      "sofascore": "VfL Bochum",
+      "footystats": "VfL Bochum"
+    }
+  },
+  "st_pauli": {
+    "canonical": "FC St. Pauli",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "St Pauli",
+      "fbref": "St. Pauli",
+      "understat": "St. Pauli",
+      "forebet": "St. Pauli",
+      "predictz": "St Pauli",
+      "windrawwin": "St Pauli",
+      "oddsportal": "St. Pauli",
+      "transfermarkt": "FC St. Pauli",
+      "clubelo": "St. Pauli",
+      "sofascore": "FC St. Pauli",
+      "footystats": "FC St. Pauli"
+    }
+  },
+  "holstein_kiel": {
+    "canonical": "Holstein Kiel",
+    "country": "Germany",
+    "league": "Bundesliga",
+    "aliases": {
+      "football_data_uk": "Holstein Kiel",
+      "fbref": "Holstein Kiel",
+      "understat": "Holstein Kiel",
+      "forebet": "Holstein Kiel",
+      "predictz": "Holstein Kiel",
+      "windrawwin": "Holstein Kiel",
+      "oddsportal": "Holstein Kiel",
+      "transfermarkt": "Holstein Kiel",
+      "clubelo": "Holstein Kiel",
+      "sofascore": "Holstein Kiel",
+      "footystats": "Holstein Kiel"
+    }
+  },
+  "inter": {
+    "canonical": "Inter Milan",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Inter",
+      "fbref": "Inter Milan",
+      "understat": "Internazionale",
+      "forebet": "Inter",
+      "predictz": "Inter Milan",
+      "windrawwin": "Inter Milan",
+      "oddsportal": "Inter Milan",
+      "transfermarkt": "Inter Milan",
+      "clubelo": "Inter",
+      "sofascore": "Inter",
+      "footystats": "FC Internazionale"
+    }
+  },
+  "ac_milan": {
+    "canonical": "AC Milan",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "AC Milan",
+      "fbref": "AC Milan",
+      "understat": "AC Milan",
+      "forebet": "AC Milan",
+      "predictz": "AC Milan",
+      "windrawwin": "AC Milan",
+      "oddsportal": "AC Milan",
+      "transfermarkt": "AC Milan",
+      "clubelo": "Milan",
+      "sofascore": "AC Milan",
+      "footystats": "AC Milan"
+    }
+  },
+  "juventus": {
+    "canonical": "Juventus",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Juventus",
+      "fbref": "Juventus",
+      "understat": "Juventus",
+      "forebet": "Juventus",
+      "predictz": "Juventus",
+      "windrawwin": "Juventus",
+      "oddsportal": "Juventus",
+      "transfermarkt": "Juventus FC",
+      "clubelo": "Juventus",
+      "sofascore": "Juventus",
+      "footystats": "Juventus FC"
+    }
+  },
+  "napoli": {
+    "canonical": "Napoli",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Napoli",
+      "fbref": "Napoli",
+      "understat": "Napoli",
+      "forebet": "Napoli",
+      "predictz": "Napoli",
+      "windrawwin": "Napoli",
+      "oddsportal": "Napoli",
+      "transfermarkt": "SSC Napoli",
+      "clubelo": "Napoli",
+      "sofascore": "Napoli",
+      "footystats": "SSC Napoli"
+    }
+  },
+  "roma": {
+    "canonical": "Roma",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Roma",
+      "fbref": "Roma",
+      "understat": "Roma",
+      "forebet": "Roma",
+      "predictz": "Roma",
+      "windrawwin": "Roma",
+      "oddsportal": "Roma",
+      "transfermarkt": "AS Roma",
+      "clubelo": "Roma",
+      "sofascore": "Roma",
+      "footystats": "AS Roma"
+    }
+  },
+  "lazio": {
+    "canonical": "Lazio",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Lazio",
+      "fbref": "Lazio",
+      "understat": "Lazio",
+      "forebet": "Lazio",
+      "predictz": "Lazio",
+      "windrawwin": "Lazio",
+      "oddsportal": "Lazio",
+      "transfermarkt": "SS Lazio",
+      "clubelo": "Lazio",
+      "sofascore": "Lazio",
+      "footystats": "SS Lazio"
+    }
+  },
+  "atalanta": {
+    "canonical": "Atalanta",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Atalanta",
+      "fbref": "Atalanta",
+      "understat": "Atalanta",
+      "forebet": "Atalanta",
+      "predictz": "Atalanta",
+      "windrawwin": "Atalanta",
+      "oddsportal": "Atalanta",
+      "transfermarkt": "Atalanta BC",
+      "clubelo": "Atalanta",
+      "sofascore": "Atalanta",
+      "footystats": "Atalanta BC"
+    }
+  },
+  "fiorentina": {
+    "canonical": "Fiorentina",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Fiorentina",
+      "fbref": "Fiorentina",
+      "understat": "Fiorentina",
+      "forebet": "Fiorentina",
+      "predictz": "Fiorentina",
+      "windrawwin": "Fiorentina",
+      "oddsportal": "Fiorentina",
+      "transfermarkt": "ACF Fiorentina",
+      "clubelo": "Fiorentina",
+      "sofascore": "Fiorentina",
+      "footystats": "ACF Fiorentina"
+    }
+  },
+  "bologna": {
+    "canonical": "Bologna",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Bologna",
+      "fbref": "Bologna",
+      "understat": "Bologna",
+      "forebet": "Bologna",
+      "predictz": "Bologna",
+      "windrawwin": "Bologna",
+      "oddsportal": "Bologna",
+      "transfermarkt": "Bologna FC 1909",
+      "clubelo": "Bologna",
+      "sofascore": "Bologna",
+      "footystats": "Bologna FC"
+    }
+  },
+  "torino": {
+    "canonical": "Torino",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Torino",
+      "fbref": "Torino",
+      "understat": "Torino",
+      "forebet": "Torino",
+      "predictz": "Torino",
+      "windrawwin": "Torino",
+      "oddsportal": "Torino",
+      "transfermarkt": "Torino FC",
+      "clubelo": "Torino",
+      "sofascore": "Torino",
+      "footystats": "Torino FC"
+    }
+  },
+  "udinese": {
+    "canonical": "Udinese",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Udinese",
+      "fbref": "Udinese",
+      "understat": "Udinese",
+      "forebet": "Udinese",
+      "predictz": "Udinese",
+      "windrawwin": "Udinese",
+      "oddsportal": "Udinese",
+      "transfermarkt": "Udinese Calcio",
+      "clubelo": "Udinese",
+      "sofascore": "Udinese",
+      "footystats": "Udinese Calcio"
+    }
+  },
+  "genoa": {
+    "canonical": "Genoa",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Genoa",
+      "fbref": "Genoa",
+      "understat": "Genoa",
+      "forebet": "Genoa",
+      "predictz": "Genoa",
+      "windrawwin": "Genoa",
+      "oddsportal": "Genoa",
+      "transfermarkt": "Genoa CFC",
+      "clubelo": "Genoa",
+      "sofascore": "Genoa",
+      "footystats": "Genoa CFC"
+    }
+  },
+  "cagliari": {
+    "canonical": "Cagliari",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Cagliari",
+      "fbref": "Cagliari",
+      "understat": "Cagliari",
+      "forebet": "Cagliari",
+      "predictz": "Cagliari",
+      "windrawwin": "Cagliari",
+      "oddsportal": "Cagliari",
+      "transfermarkt": "Cagliari Calcio",
+      "clubelo": "Cagliari",
+      "sofascore": "Cagliari",
+      "footystats": "Cagliari Calcio"
+    }
+  },
+  "hellas_verona": {
+    "canonical": "Hellas Verona",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Verona",
+      "fbref": "Hellas Verona",
+      "understat": "Verona",
+      "forebet": "Verona",
+      "predictz": "Verona",
+      "windrawwin": "Verona",
+      "oddsportal": "Hellas Verona",
+      "transfermarkt": "Hellas Verona",
+      "clubelo": "Verona",
+      "sofascore": "Hellas Verona",
+      "footystats": "Hellas Verona"
+    }
+  },
+  "empoli": {
+    "canonical": "Empoli",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Empoli",
+      "fbref": "Empoli",
+      "understat": "Empoli",
+      "forebet": "Empoli",
+      "predictz": "Empoli",
+      "windrawwin": "Empoli",
+      "oddsportal": "Empoli",
+      "transfermarkt": "Empoli FC",
+      "clubelo": "Empoli",
+      "sofascore": "Empoli",
+      "footystats": "Empoli FC"
+    }
+  },
+  "como": {
+    "canonical": "Como",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Como",
+      "fbref": "Como",
+      "understat": "Como",
+      "forebet": "Como",
+      "predictz": "Como",
+      "windrawwin": "Como",
+      "oddsportal": "Como",
+      "transfermarkt": "Como 1907",
+      "clubelo": "Como",
+      "sofascore": "Como",
+      "footystats": "Como 1907"
+    }
+  },
+  "parma": {
+    "canonical": "Parma",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Parma",
+      "fbref": "Parma",
+      "understat": "Parma Calcio 1913",
+      "forebet": "Parma",
+      "predictz": "Parma",
+      "windrawwin": "Parma",
+      "oddsportal": "Parma",
+      "transfermarkt": "Parma Calcio 1913",
+      "clubelo": "Parma",
+      "sofascore": "Parma",
+      "footystats": "Parma Calcio 1913"
+    }
+  },
+  "venezia": {
+    "canonical": "Venezia",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Venezia",
+      "fbref": "Venezia",
+      "understat": "Venezia",
+      "forebet": "Venezia",
+      "predictz": "Venezia",
+      "windrawwin": "Venezia",
+      "oddsportal": "Venezia",
+      "transfermarkt": "Venezia FC",
+      "clubelo": "Venezia",
+      "sofascore": "Venezia",
+      "footystats": "Venezia FC"
+    }
+  },
+  "lecce": {
+    "canonical": "Lecce",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Lecce",
+      "fbref": "Lecce",
+      "understat": "Lecce",
+      "forebet": "Lecce",
+      "predictz": "Lecce",
+      "windrawwin": "Lecce",
+      "oddsportal": "Lecce",
+      "transfermarkt": "US Lecce",
+      "clubelo": "Lecce",
+      "sofascore": "Lecce",
+      "footystats": "US Lecce"
+    }
+  },
+  "monza": {
+    "canonical": "Monza",
+    "country": "Italy",
+    "league": "Serie A",
+    "aliases": {
+      "football_data_uk": "Monza",
+      "fbref": "Monza",
+      "understat": "Monza",
+      "forebet": "Monza",
+      "predictz": "Monza",
+      "windrawwin": "Monza",
+      "oddsportal": "Monza",
+      "transfermarkt": "AC Monza",
+      "clubelo": "Monza",
+      "sofascore": "Monza",
+      "footystats": "AC Monza"
+    }
+  },
+  "psg": {
+    "canonical": "Paris Saint-Germain",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Paris SG",
+      "fbref": "Paris Saint-Germain",
+      "understat": "Paris Saint Germain",
+      "forebet": "Paris SG",
+      "predictz": "Paris SG",
+      "windrawwin": "Paris St Germain",
+      "oddsportal": "Paris Saint-Germain",
+      "transfermarkt": "Paris Saint-Germain",
+      "clubelo": "PSG",
+      "sofascore": "Paris Saint-Germain",
+      "footystats": "Paris Saint-Germain"
+    }
+  },
+  "marseille": {
+    "canonical": "Olympique Marseille",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Marseille",
+      "fbref": "Marseille",
+      "understat": "Marseille",
+      "forebet": "Marseille",
+      "predictz": "Marseille",
+      "windrawwin": "Marseille",
+      "oddsportal": "Marseille",
+      "transfermarkt": "Olympique Marseille",
+      "clubelo": "Marseille",
+      "sofascore": "Marseille",
+      "footystats": "Olympique de Marseille"
+    }
+  },
+  "lyon": {
+    "canonical": "Olympique Lyon",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Lyon",
+      "fbref": "Lyon",
+      "understat": "Lyon",
+      "forebet": "Lyon",
+      "predictz": "Lyon",
+      "windrawwin": "Lyon",
+      "oddsportal": "Lyon",
+      "transfermarkt": "Olympique Lyon",
+      "clubelo": "Lyon",
+      "sofascore": "Lyon",
+      "footystats": "Olympique Lyonnais"
+    }
+  },
+  "monaco": {
+    "canonical": "AS Monaco",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Monaco",
+      "fbref": "Monaco",
+      "understat": "Monaco",
+      "forebet": "Monaco",
+      "predictz": "Monaco",
+      "windrawwin": "Monaco",
+      "oddsportal": "Monaco",
+      "transfermarkt": "AS Monaco",
+      "clubelo": "Monaco",
+      "sofascore": "Monaco",
+      "footystats": "AS Monaco"
+    }
+  },
+  "lille": {
+    "canonical": "Lille",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Lille",
+      "fbref": "Lille",
+      "understat": "Lille",
+      "forebet": "Lille",
+      "predictz": "Lille",
+      "windrawwin": "Lille",
+      "oddsportal": "Lille",
+      "transfermarkt": "Lille OSC",
+      "clubelo": "Lille",
+      "sofascore": "Lille",
+      "footystats": "Lille OSC"
+    }
+  },
+  "nice": {
+    "canonical": "OGC Nice",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Nice",
+      "fbref": "Nice",
+      "understat": "Nice",
+      "forebet": "Nice",
+      "predictz": "Nice",
+      "windrawwin": "Nice",
+      "oddsportal": "Nice",
+      "transfermarkt": "OGC Nice",
+      "clubelo": "Nice",
+      "sofascore": "Nice",
+      "footystats": "OGC Nice"
+    }
+  },
+  "lens": {
+    "canonical": "RC Lens",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Lens",
+      "fbref": "Lens",
+      "understat": "Lens",
+      "forebet": "Lens",
+      "predictz": "Lens",
+      "windrawwin": "Lens",
+      "oddsportal": "Lens",
+      "transfermarkt": "RC Lens",
+      "clubelo": "Lens",
+      "sofascore": "Lens",
+      "footystats": "RC Lens"
+    }
+  },
+  "rennes": {
+    "canonical": "Stade Rennais",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Rennes",
+      "fbref": "Rennes",
+      "understat": "Rennes",
+      "forebet": "Rennes",
+      "predictz": "Rennes",
+      "windrawwin": "Rennes",
+      "oddsportal": "Rennes",
+      "transfermarkt": "Stade Rennais FC",
+      "clubelo": "Rennes",
+      "sofascore": "Rennes",
+      "footystats": "Stade Rennais"
+    }
+  },
+  "strasbourg": {
+    "canonical": "RC Strasbourg",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Strasbourg",
+      "fbref": "Strasbourg",
+      "understat": "Strasbourg",
+      "forebet": "Strasbourg",
+      "predictz": "Strasbourg",
+      "windrawwin": "Strasbourg",
+      "oddsportal": "Strasbourg",
+      "transfermarkt": "RC Strasbourg Alsace",
+      "clubelo": "Strasbourg",
+      "sofascore": "Strasbourg",
+      "footystats": "RC Strasbourg Alsace"
+    }
+  },
+  "nantes": {
+    "canonical": "FC Nantes",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Nantes",
+      "fbref": "Nantes",
+      "understat": "Nantes",
+      "forebet": "Nantes",
+      "predictz": "Nantes",
+      "windrawwin": "Nantes",
+      "oddsportal": "Nantes",
+      "transfermarkt": "FC Nantes",
+      "clubelo": "Nantes",
+      "sofascore": "Nantes",
+      "footystats": "FC Nantes"
+    }
+  },
+  "reims": {
+    "canonical": "Stade de Reims",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Reims",
+      "fbref": "Reims",
+      "understat": "Reims",
+      "forebet": "Reims",
+      "predictz": "Reims",
+      "windrawwin": "Reims",
+      "oddsportal": "Reims",
+      "transfermarkt": "Stade de Reims",
+      "clubelo": "Reims",
+      "sofascore": "Reims",
+      "footystats": "Stade de Reims"
+    }
+  },
+  "toulouse": {
+    "canonical": "Toulouse",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Toulouse",
+      "fbref": "Toulouse",
+      "understat": "Toulouse",
+      "forebet": "Toulouse",
+      "predictz": "Toulouse",
+      "windrawwin": "Toulouse",
+      "oddsportal": "Toulouse",
+      "transfermarkt": "Toulouse FC",
+      "clubelo": "Toulouse",
+      "sofascore": "Toulouse",
+      "footystats": "Toulouse FC"
+    }
+  },
+  "montpellier": {
+    "canonical": "Montpellier",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Montpellier",
+      "fbref": "Montpellier",
+      "understat": "Montpellier",
+      "forebet": "Montpellier",
+      "predictz": "Montpellier",
+      "windrawwin": "Montpellier",
+      "oddsportal": "Montpellier",
+      "transfermarkt": "Montpellier HSC",
+      "clubelo": "Montpellier",
+      "sofascore": "Montpellier",
+      "footystats": "Montpellier HSC"
+    }
+  },
+  "brest": {
+    "canonical": "Stade Brestois",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Brest",
+      "fbref": "Brest",
+      "understat": "Brest",
+      "forebet": "Brest",
+      "predictz": "Brest",
+      "windrawwin": "Brest",
+      "oddsportal": "Brest",
+      "transfermarkt": "Stade Brestois 29",
+      "clubelo": "Brest",
+      "sofascore": "Brest",
+      "footystats": "Stade Brestois 29"
+    }
+  },
+  "le_havre": {
+    "canonical": "Le Havre",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Le Havre",
+      "fbref": "Le Havre",
+      "understat": "Le Havre",
+      "forebet": "Le Havre",
+      "predictz": "Le Havre",
+      "windrawwin": "Le Havre",
+      "oddsportal": "Le Havre",
+      "transfermarkt": "Le Havre AC",
+      "clubelo": "Le Havre",
+      "sofascore": "Le Havre",
+      "footystats": "Le Havre AC"
+    }
+  },
+  "saint_etienne": {
+    "canonical": "Saint-Etienne",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "St Etienne",
+      "fbref": "Saint-Etienne",
+      "understat": "Saint-Etienne",
+      "forebet": "St. Etienne",
+      "predictz": "St Etienne",
+      "windrawwin": "St Etienne",
+      "oddsportal": "Saint-Etienne",
+      "transfermarkt": "AS Saint-Étienne",
+      "clubelo": "St Etienne",
+      "sofascore": "Saint-Étienne",
+      "footystats": "AS Saint-Étienne"
+    }
+  },
+  "auxerre": {
+    "canonical": "AJ Auxerre",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Auxerre",
+      "fbref": "Auxerre",
+      "understat": "Auxerre",
+      "forebet": "Auxerre",
+      "predictz": "Auxerre",
+      "windrawwin": "Auxerre",
+      "oddsportal": "Auxerre",
+      "transfermarkt": "AJ Auxerre",
+      "clubelo": "Auxerre",
+      "sofascore": "Auxerre",
+      "footystats": "AJ Auxerre"
+    }
+  },
+  "angers": {
+    "canonical": "Angers SCO",
+    "country": "France",
+    "league": "Ligue 1",
+    "aliases": {
+      "football_data_uk": "Angers",
+      "fbref": "Angers",
+      "understat": "Angers",
+      "forebet": "Angers",
+      "predictz": "Angers",
+      "windrawwin": "Angers",
+      "oddsportal": "Angers",
+      "transfermarkt": "Angers SCO",
+      "clubelo": "Angers",
+      "sofascore": "Angers",
+      "footystats": "Angers SCO"
+    }
+  }
+}
