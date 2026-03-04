@@ -8,7 +8,7 @@ Features:
   mkt_best_odds_away     - Best available away odds
   mkt_avg_odds_home      - Average home odds (market consensus)
   mkt_pinnacle_implied_h - Pinnacle (sharpest) implied home prob
-  mkt_odds_movement      - Placeholder (0.0 — needs opening/closing data)
+  mkt_implied_draw       - Market-implied draw probability (devigged)
   mkt_market_disagree    - Max - Min home odds (bookmaker disagreement)
   mkt_overround          - Total implied probability (measures margin)
 """
@@ -22,7 +22,7 @@ FEATURE_NAMES = [
     "mkt_best_odds_away",
     "mkt_avg_odds_home",
     "mkt_pinnacle_implied_h",
-    "mkt_odds_movement",
+    "mkt_implied_draw",
     "mkt_market_disagree",
     "mkt_overround",
 ]
@@ -60,18 +60,19 @@ class MarketFeatures(FeatureGroup):
 
             if draw_odds:
                 result.loc[idx, "mkt_best_odds_draw"] = max(draw_odds)
+
             if away_odds:
                 result.loc[idx, "mkt_best_odds_away"] = max(away_odds)
 
-            # Overround
+            # Devigged implied draw probability (removes bookmaker margin)
             avg_h = np.mean(home_odds) if home_odds else None
             avg_d = np.mean(draw_odds) if draw_odds else None
             avg_a = np.mean(away_odds) if away_odds else None
             if avg_h and avg_d and avg_a and avg_h > 0 and avg_d > 0 and avg_a > 0:
-                result.loc[idx, "mkt_overround"] = (1/avg_h + 1/avg_d + 1/avg_a) * 100
-
-            # Odds movement: placeholder (would need opening vs closing odds)
-            result.loc[idx, "mkt_odds_movement"] = 0.0
+                overround = 1/avg_h + 1/avg_d + 1/avg_a
+                result.loc[idx, "mkt_overround"] = overround * 100
+                # Devigged: normalize implied probs to sum to 1
+                result.loc[idx, "mkt_implied_draw"] = (1/avg_d) / overround
 
         return result
 

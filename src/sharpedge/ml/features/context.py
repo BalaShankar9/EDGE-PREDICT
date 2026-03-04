@@ -6,9 +6,9 @@ Features:
   ctx_home_rest_days   - Days since home team's last match
   ctx_away_rest_days   - Days since away team's last match
   ctx_home_advantage   - League-specific home win rate (historical)
-  ctx_match_importance - 1.0 for title/relegation, 0.5 mid-table, 0.0 nothing
+  ctx_rest_advantage   - Rest days difference (positive = home more rested)
   ctx_is_derby         - Local derby flag
-  ctx_temperature      - Temperature at match time (placeholder)
+  ctx_month            - Month of year (seasonality signal)
 """
 import pandas as pd
 import numpy as np
@@ -18,23 +18,31 @@ FEATURE_NAMES = [
     "ctx_home_rest_days",
     "ctx_away_rest_days",
     "ctx_home_advantage",
-    "ctx_match_importance",
+    "ctx_rest_advantage",
     "ctx_is_derby",
-    "ctx_temperature",
+    "ctx_month",
 ]
 
 # Known derby pairs (canonical team IDs)
 DERBIES = {
-    frozenset({"arsenal", "tottenham"}),
-    frozenset({"liverpool", "everton"}),
-    frozenset({"man_united", "man_city"}),
-    frozenset({"real_madrid", "barcelona"}),
-    frozenset({"ac_milan", "inter"}),
-    frozenset({"roma", "lazio"}),
-    frozenset({"bayern_munich", "dortmund"}),
-    frozenset({"psg", "marseille"}),
-    frozenset({"chelsea", "arsenal"}),
-    frozenset({"man_united", "liverpool"}),
+    frozenset({"Arsenal", "Tottenham"}),
+    frozenset({"Liverpool", "Everton"}),
+    frozenset({"Man United", "Man City"}),
+    frozenset({"Real Madrid", "Barcelona"}),
+    frozenset({"AC Milan", "Inter"}),
+    frozenset({"Roma", "Lazio"}),
+    frozenset({"Bayern Munich", "Dortmund"}),
+    frozenset({"Paris SG", "Marseille"}),
+    frozenset({"Chelsea", "Arsenal"}),
+    frozenset({"Man United", "Liverpool"}),
+    frozenset({"Chelsea", "Tottenham"}),
+    frozenset({"Juventus", "Inter"}),
+    frozenset({"Ath Madrid", "Real Madrid"}),
+    frozenset({"Leverkusen", "Dortmund"}),
+    frozenset({"Lyon", "Marseille"}),
+    frozenset({"Napoli", "Juventus"}),
+    frozenset({"West Ham", "Tottenham"}),
+    frozenset({"Newcastle", "Sunderland"}),
 }
 
 
@@ -68,34 +76,41 @@ class ContextFeatures(FeatureGroup):
             prior = df[df["match_date"] < match_date]
 
             # Rest days
+            home_rest = np.nan
             home_last = prior[
                 (prior["home_team_id"] == home_id) | (prior["away_team_id"] == home_id)
             ]
             if not home_last.empty:
                 last_date = home_last["match_date"].max()
-                result.loc[idx, "ctx_home_rest_days"] = (match_date - last_date).days
+                home_rest = (match_date - last_date).days
+                result.loc[idx, "ctx_home_rest_days"] = home_rest
 
+            away_rest = np.nan
             away_last = prior[
                 (prior["home_team_id"] == away_id) | (prior["away_team_id"] == away_id)
             ]
             if not away_last.empty:
                 last_date = away_last["match_date"].max()
-                result.loc[idx, "ctx_away_rest_days"] = (match_date - last_date).days
+                away_rest = (match_date - last_date).days
+                result.loc[idx, "ctx_away_rest_days"] = away_rest
+
+            # Rest advantage (positive = home team more rested)
+            if not np.isnan(home_rest) and not np.isnan(away_rest):
+                result.loc[idx, "ctx_rest_advantage"] = home_rest - away_rest
 
             # League home advantage
             league = row.get("league")
             if league and league in league_home_advantage:
                 result.loc[idx, "ctx_home_advantage"] = league_home_advantage[league]
 
-            # Match importance: default 0.5 (would need table position data for real calc)
-            result.loc[idx, "ctx_match_importance"] = 0.5
-
-            # Derby check
-            pair = frozenset({home_id, away_id})
+            # Derby check (use team names from home_team_name column if available)
+            home_name = row.get("home_team_name", str(home_id))
+            away_name = row.get("away_team_name", str(away_id))
+            pair = frozenset({home_name, away_name})
             result.loc[idx, "ctx_is_derby"] = 1.0 if pair in DERBIES else 0.0
 
-            # Temperature: placeholder
-            result.loc[idx, "ctx_temperature"] = 15.0  # Default average
+            # Month (seasonality — early/late season effects)
+            result.loc[idx, "ctx_month"] = match_date.month
 
         return result
 

@@ -212,11 +212,14 @@ def run_backfill(
         WinDrawWinCollector,
         FootyStatsCollector,
     ]
-    season_agnostic = [
-        ClubELOCollector,
-        FootballDataOrgCollector,
-        OpenMeteoCollector,
-    ]
+    # Map season labels to approximate date ranges for ELO fetching
+    _SEASON_DATES = {
+        "2020-21": ("2020-08-01", "2021-06-30"),
+        "2021-22": ("2021-08-01", "2022-06-30"),
+        "2022-23": ("2022-08-01", "2023-06-30"),
+        "2023-24": ("2023-08-01", "2024-06-30"),
+        "2024-25": ("2024-08-01", "2025-06-30"),
+    }
 
     for season in seasons:
         logger.info(f"=== Backfilling season {season} ===")
@@ -225,7 +228,16 @@ def run_backfill(
             result = _run_collector(collector_cls(), season=season)
             results.append(result)
 
-        for collector_cls in season_agnostic:
+        # ClubELO: fetch monthly snapshots for the season
+        if season in _SEASON_DATES:
+            start, end = _SEASON_DATES[season]
+            result = _run_collector(ClubELOCollector(), date_range=(start, end))
+        else:
+            result = _run_collector(ClubELOCollector())
+        results.append(result)
+
+        # Other season-agnostic collectors
+        for collector_cls in [FootballDataOrgCollector, OpenMeteoCollector]:
             result = _run_collector(collector_cls())
             results.append(result)
 

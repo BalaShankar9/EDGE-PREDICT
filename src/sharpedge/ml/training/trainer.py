@@ -48,7 +48,17 @@ class ModelTrainer:
         min_train_seasons: int = 3,
         calibration_method: str = "platt",
     ):
-        self.xgb_params = xgb_params or {"n_estimators": 100, "max_depth": 5}
+        self.xgb_params = xgb_params or {
+            "n_estimators": 500,
+            "max_depth": 5,
+            "learning_rate": 0.03,
+            "subsample": 0.8,
+            "colsample_bytree": 0.7,
+            "min_child_weight": 10,
+            "reg_alpha": 0.5,
+            "reg_lambda": 2.0,
+            "random_state": 42,
+        }
         self.n_splits = n_splits
         self.min_train_seasons = min_train_seasons
         self.calibration_method = calibration_method
@@ -214,7 +224,19 @@ class ModelTrainer:
 
         self.ensemble = EnsemblePredictor()
         self.ensemble.weights = result.ensemble_weights
+
+        # Fit calibrator on full-data predictions
+        xgb_proba_all = self.xgb_model.predict_proba_1x2(X)
+        poisson_proba_all = np.zeros((len(matches_df), 3))
+        for k in range(len(matches_df)):
+            home = matches_df.iloc[k]["home_team_id"]
+            away = matches_df.iloc[k]["away_team_id"]
+            poisson_proba_all[k] = self.poisson_model.predict_proba_1x2(home, away)
+        combined_all = self.ensemble.predict(
+            {"xgboost": xgb_proba_all, "poisson": poisson_proba_all}
+        )
         self.calibrator = ProbabilityCalibrator(method=self.calibration_method)
+        self.calibrator.fit(y_1x2_encoded, combined_all)
 
         logger.info(
             f"Training complete. Mean RPS: {result.aggregate_metrics['mean_rps']:.4f}"

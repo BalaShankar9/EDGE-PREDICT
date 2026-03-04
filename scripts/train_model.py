@@ -28,20 +28,42 @@ def load_training_data():
         SELECT
             m.id, m.match_date, m.home_team_id, m.away_team_id,
             m.home_goals AS "FTHG", m.away_goals AS "FTAG",
+            m.home_goals_ht AS "HTHG", m.away_goals_ht AS "HTAG",
             CASE
                 WHEN m.home_goals > m.away_goals THEN 'H'
                 WHEN m.home_goals = m.away_goals THEN 'D'
                 ELSE 'A'
             END AS "FTR",
+            m.referee AS "Referee",
             ht.canonical_name AS home_team_name,
             at.canonical_name AS away_team_name,
             l.name AS league,
-            s.label AS season
+            s.label AS season,
+            -- Match stats
+            ms.home_shots AS "HS", ms.away_shots AS "AS",
+            ms.home_shots_on_target AS "HST", ms.away_shots_on_target AS "AST",
+            ms.home_fouls AS "HF", ms.away_fouls AS "AF",
+            ms.home_corners AS "HC", ms.away_corners AS "AC",
+            -- Odds: Bet365
+            b365.odds_home AS "B365H", b365.odds_draw AS "B365D", b365.odds_away AS "B365A",
+            -- Odds: Pinnacle
+            ps.odds_home AS "PSH", ps.odds_draw AS "PSD", ps.odds_away AS "PSA",
+            -- Odds: William Hill
+            wh.odds_home AS "WHH", wh.odds_draw AS "WHD", wh.odds_away AS "WHA",
+            -- Odds: Max & Avg
+            mx.odds_home AS "MaxH", mx.odds_draw AS "MaxD", mx.odds_away AS "MaxA",
+            av.odds_home AS "AvgH", av.odds_draw AS "AvgD", av.odds_away AS "AvgA"
         FROM matches m
         JOIN teams ht ON m.home_team_id = ht.id
         JOIN teams at ON m.away_team_id = at.id
         JOIN seasons s ON m.season_id = s.id
         JOIN leagues l ON s.league_id = l.id
+        LEFT JOIN match_stats ms ON ms.match_id = m.id
+        LEFT JOIN match_odds b365 ON b365.match_id = m.id AND b365.bookmaker = 'Bet365'
+        LEFT JOIN match_odds ps ON ps.match_id = m.id AND ps.bookmaker = 'Pinnacle'
+        LEFT JOIN match_odds wh ON wh.match_id = m.id AND wh.bookmaker = 'WilliamHill'
+        LEFT JOIN match_odds mx ON mx.match_id = m.id AND mx.bookmaker = 'MarketMax'
+        LEFT JOIN match_odds av ON av.match_id = m.id AND av.bookmaker = 'MarketAvg'
         WHERE m.home_goals IS NOT NULL AND m.away_goals IS NOT NULL
         ORDER BY m.match_date
     """)
@@ -55,8 +77,10 @@ def load_training_data():
     elo_df = pd.read_sql(elo_query, session.bind)
 
     xg_query = text("""
-        SELECT match_id, source, home_xg, away_xg
-        FROM match_xg
+        SELECT x.match_id, x.source, x.home_xg, x.away_xg,
+               m.match_date, m.home_team_id, m.away_team_id
+        FROM match_xg x
+        JOIN matches m ON x.match_id = m.id
     """)
     xg_df = pd.read_sql(xg_query, session.bind)
 

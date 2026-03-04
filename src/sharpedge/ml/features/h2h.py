@@ -8,7 +8,7 @@ Features:
   h2h_home_goals_avg   - Avg goals by home team in H2H
   h2h_away_goals_avg   - Avg goals by away team in H2H
   h2h_btts_rate        - Both Teams To Score rate in H2H
-  h2h_home_advantage   - Home advantage factor (home wins / total H2H)
+  h2h_goals_diff       - Avg goal difference (home team perspective) in H2H
 """
 import pandas as pd
 import numpy as np
@@ -20,7 +20,7 @@ FEATURE_NAMES = [
     "h2h_home_goals_avg",
     "h2h_away_goals_avg",
     "h2h_btts_rate",
-    "h2h_home_advantage",
+    "h2h_goals_diff",
 ]
 
 class H2HFeatures(FeatureGroup):
@@ -74,7 +74,7 @@ class H2HFeatures(FeatureGroup):
             result.loc[idx, "h2h_home_goals_avg"] = np.mean(total_goals_h)
             result.loc[idx, "h2h_away_goals_avg"] = np.mean(total_goals_a)
             result.loc[idx, "h2h_btts_rate"] = btts_count / n
-            result.loc[idx, "h2h_home_advantage"] = home_wins / n
+            result.loc[idx, "h2h_goals_diff"] = np.mean(total_goals_h) - np.mean(total_goals_a)
 
         return result
 
