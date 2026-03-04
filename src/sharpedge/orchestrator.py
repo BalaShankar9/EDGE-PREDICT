@@ -181,38 +181,39 @@ def run_backfill(
 ) -> list[CollectionResult]:
     """Backfill historical data for specified seasons.
 
-    Parameters
-    ----------
-    seasons : list[str], optional
-        Seasons to backfill (e.g. ``["2020-21", "2021-22"]``).
-        Defaults to all 5 recent seasons.
-
-    Returns
-    -------
-    list[CollectionResult]
+    Runs all 10 collectors for each season. Collectors that don't support
+    season-specific collection are run once per season anyway (they'll
+    return their default data range).
     """
     if seasons is None:
         seasons = DEFAULT_SEASONS
 
     results: list[CollectionResult] = []
 
+    season_aware = [
+        FootballDataUKCollector,
+        UnderstatCollector,
+        FBrefCollector,
+        ForebetCollector,
+        PredictZCollector,
+        WinDrawWinCollector,
+        FootyStatsCollector,
+    ]
+    season_agnostic = [
+        ClubELOCollector,
+        FootballDataOrgCollector,
+        OpenMeteoCollector,
+    ]
+
     for season in seasons:
         logger.info(f"=== Backfilling season {season} ===")
 
-        # Football-Data UK — supports league/season kwargs
-        result = _run_collector(
-            FootballDataUKCollector(), season=season,
-        )
-        results.append(result)
+        for collector_cls in season_aware:
+            result = _run_collector(collector_cls(), season=season)
+            results.append(result)
 
-        # ClubELO — date-based; approximate season date range
-        result = _run_collector(ClubELOCollector())
-        results.append(result)
-
-        # Understat — supports league/season kwargs
-        result = _run_collector(
-            UnderstatCollector(), season=season,
-        )
-        results.append(result)
+        for collector_cls in season_agnostic:
+            result = _run_collector(collector_cls())
+            results.append(result)
 
     return results
