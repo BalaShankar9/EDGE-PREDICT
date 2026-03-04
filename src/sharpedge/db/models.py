@@ -259,3 +259,85 @@ class RawStagingRecord(Base):
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     validated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class PipelineRun(Base):
+    __tablename__ = "pipeline_runs"
+    __table_args__ = (Index("ix_pipeline_runs_run_date", "run_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_date: Mapped[date] = mapped_column(Date, nullable=False)
+    run_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="running")
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    fixtures_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    predictions_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    picks_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    predictions: Mapped[List["Prediction"]] = relationship("Prediction", back_populates="pipeline_run")
+    picks: Mapped[List["DailyPick"]] = relationship("DailyPick", back_populates="pipeline_run")
+
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+    __table_args__ = (Index("ix_predictions_match_date", "match_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    pipeline_run_id: Mapped[int] = mapped_column(Integer, ForeignKey("pipeline_runs.id"), nullable=False)
+    match_date: Mapped[date] = mapped_column(Date, nullable=False)
+    home_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    away_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    league: Mapped[str] = mapped_column(String(200), nullable=False)
+    prob_home: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_draw: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_away: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_over: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_under: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_btts_yes: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    prob_btts_no: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    xgboost_probs: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    poisson_probs: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    ensemble_weights: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    pipeline_run: Mapped["PipelineRun"] = relationship("PipelineRun", back_populates="predictions")
+    picks: Mapped[List["DailyPick"]] = relationship("DailyPick", back_populates="prediction")
+
+
+class DailyPick(Base):
+    __tablename__ = "daily_picks"
+    __table_args__ = (
+        Index("ix_daily_picks_match_date", "match_date"),
+        Index("ix_daily_picks_tier", "tier"),
+        Index("ix_daily_picks_result", "result"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    pipeline_run_id: Mapped[int] = mapped_column(Integer, ForeignKey("pipeline_runs.id"), nullable=False)
+    prediction_id: Mapped[int] = mapped_column(Integer, ForeignKey("predictions.id"), nullable=False)
+    match_date: Mapped[date] = mapped_column(Date, nullable=False)
+    home_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    away_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    league: Mapped[str] = mapped_column(String(200), nullable=False)
+    pick_market: Mapped[str] = mapped_column(String(20), nullable=False)
+    pick_selection: Mapped[str] = mapped_column(String(50), nullable=False)
+    model_prob: Mapped[float] = mapped_column(Float, nullable=False)
+    model_spread: Mapped[float] = mapped_column(Float, nullable=False)
+    best_odds: Mapped[float] = mapped_column(Float, nullable=False)
+    bookmaker: Mapped[str] = mapped_column(String(100), nullable=False)
+    implied_prob: Mapped[float] = mapped_column(Float, nullable=False)
+    edge: Mapped[float] = mapped_column(Float, nullable=False)
+    tier: Mapped[str] = mapped_column(String(20), nullable=False)
+    meta_agreement: Mapped[int] = mapped_column(Integer, nullable=False)
+    risk_flags: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    stake_flat: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    stake_kelly: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    result: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    profit_loss: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    broadcasted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    pipeline_run: Mapped["PipelineRun"] = relationship("PipelineRun", back_populates="picks")
+    prediction: Mapped["Prediction"] = relationship("Prediction", back_populates="picks")
