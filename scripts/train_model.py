@@ -48,7 +48,7 @@ def load_training_data():
     matches_df = pd.read_sql(matches_query, session.bind)
 
     elo_query = text("""
-        SELECT team_id, rating_date, elo, source
+        SELECT team_id, rating_date AS date, elo, source
         FROM elo_ratings
         ORDER BY rating_date
     """)
