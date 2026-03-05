@@ -3,9 +3,9 @@
 Orchestrates all FeatureGroups to produce the full 46-feature matrix
 from raw match data + supplementary DataFrames.
 
-Note: XGPerformanceFeatures and MetaPredictionFeatures are excluded
-because they produce 100% NaN (no xG or competitor prediction data available).
-Re-enable them once Understat xG and competitor prediction data are ingested.
+Note: XGPerformanceFeatures, MetaPredictionFeatures, GoalPatternFeatures, and
+OverallFormFeatures are excluded. The first two produce 100% NaN (no data available).
+Goal/overall form features were tested but hurt accuracy due to noise.
 """
 import logging
 import pandas as pd

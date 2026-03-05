@@ -46,7 +46,7 @@ class ModelTrainer:
         xgb_params: dict | None = None,
         n_splits: int = 2,
         min_train_seasons: int = 3,
-        calibration_method: str = "platt",
+        calibration_method: str = "isotonic",
     ):
         self.xgb_params = xgb_params or {
             "n_estimators": 300,

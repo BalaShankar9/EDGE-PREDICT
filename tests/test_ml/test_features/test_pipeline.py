@@ -26,6 +26,8 @@ def sample_matches():
             "away_team_id": a,
             "FTHG": hg,
             "FTAG": ag,
+            "HTHG": max(0, hg - int(rng.integers(0, 2))),
+            "HTAG": max(0, ag - int(rng.integers(0, 2))),
             "FTR": result,
             "league": "Premier League",
             "B365H": round(rng.uniform(1.3, 3.5), 2),

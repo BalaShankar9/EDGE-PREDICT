@@ -1,6 +1,6 @@
 """Hyperparameter tuning — computes features ONCE, then grid-searches XGBoost params.
 
-Much faster than re-running the full pipeline for each config.
+Now includes Poisson stacking features (5 additional features per match).
 """
 import logging
 import sys
@@ -77,17 +77,17 @@ def load_training_data():
 
 PARAM_GRID = {
     "n_estimators": [300, 500, 800],
-    "max_depth": [4, 5, 6],
-    "learning_rate": [0.01, 0.03, 0.05],
-    "subsample": [0.8],
-    "colsample_bytree": [0.6, 0.7, 0.8],
-    "min_child_weight": [5, 10, 20],
-    "reg_alpha": [0.5, 1.0],
-    "reg_lambda": [1.0, 2.0],
+    "max_depth": [3, 4, 5, 6],
+    "learning_rate": [0.005, 0.01, 0.03],
+    "subsample": [0.7, 0.8],
+    "colsample_bytree": [0.5, 0.6, 0.7, 0.8],
+    "min_child_weight": [10, 20, 30],
+    "reg_alpha": [0.5, 1.0, 2.0],
+    "reg_lambda": [1.0, 2.0, 3.0],
 }
 
 
-def generate_configs(grid: dict, max_configs: int = 20) -> list[dict]:
+def generate_configs(grid: dict, max_configs: int = 30) -> list[dict]:
     keys = list(grid.keys())
     all_combos = list(itertools.product(*grid.values()))
     np.random.seed(42)
@@ -99,30 +99,41 @@ def generate_configs(grid: dict, max_configs: int = 20) -> list[dict]:
     return [{**dict(zip(keys, combo)), "random_state": 42} for combo in selected]
 
 
-def evaluate_config(config, X, y_1x2, y_1x2_encoded, y_ou, y_btts,
-                    matches_df, poisson_proba_folds):
-    """Evaluate a single XGBoost config using pre-computed features and Poisson predictions."""
-    cv = WalkForwardCV(n_splits=2, min_train_seasons=3)
+def compute_poisson_features(poisson_model, matches_df, indices):
+    """Compute 5 Poisson stacking features: P(H), P(D), P(A), xG_home, xG_away."""
+    features = np.zeros((len(indices), 5))
+    for k, idx in enumerate(indices):
+        home = matches_df.iloc[idx]["home_team_id"]
+        away = matches_df.iloc[idx]["away_team_id"]
+        proba = poisson_model.predict_proba_1x2(home, away)
+        xg_home, xg_away = poisson_model.predict_goals(home, away)
+        features[k] = [proba[0], proba[1], proba[2], xg_home, xg_away]
+    return features
+
+
+def evaluate_config(config, X_base, y_1x2, y_1x2_encoded, y_ou, y_btts,
+                    matches_df, fold_data):
+    """Evaluate a single XGBoost config using pre-computed features and Poisson stacking."""
     all_rps = []
     all_acc = []
 
-    for fold_num, (train_idx, val_idx) in enumerate(cv.split(matches_df)):
-        train_idx_arr = np.array(train_idx)
-        val_idx_arr = np.array(val_idx)
+    for fold_num, (train_idx_arr, val_idx_arr, poisson_train, poisson_val) in enumerate(fold_data):
+        # Stack Poisson features onto base features
+        X_train = np.hstack([X_base[train_idx_arr], poisson_train])
+        X_val = np.hstack([X_base[val_idx_arr], poisson_val])
 
-        X_train, X_val = X[train_idx_arr], X[val_idx_arr]
         y_train_1x2 = y_1x2[train_idx_arr]
         y_val_1x2 = y_1x2_encoded[val_idx_arr]
         y_train_ou = y_ou[train_idx_arr]
         y_train_btts = y_btts[train_idx_arr]
 
-        # Train XGBoost
+        # Train XGBoost with stacked features
         xgb = XGBoostPredictor(params=config)
         xgb.fit(X_train, y_train_1x2, y_ou=y_train_ou, y_btts=y_train_btts)
         xgb_proba = xgb.predict_proba_1x2(X_val)
 
-        # Use pre-computed Poisson predictions
-        poisson_proba = poisson_proba_folds[fold_num]
+        # Poisson 1x2 for ensemble
+        poisson_proba = poisson_val[:, :3]
 
         # Ensemble
         ensemble = EnsemblePredictor()
@@ -151,7 +162,7 @@ if __name__ == "__main__":
     matches_df, elo_df, xg_df, predictions_df = load_training_data()
     logger.info(f"Loaded {len(matches_df)} matches")
 
-    # ---- STEP 1: Compute features ONCE ----
+    # ---- STEP 1: Compute base features ONCE ----
     logger.info("Computing features (one-time)...")
     pipe = FeaturePipeline()
     feature_matrix = pipe.build(
@@ -168,18 +179,18 @@ if __name__ == "__main__":
     y_ou = (total_goals > 2.5).astype(int)
     y_btts = ((matches_df["FTHG"].values > 0) & (matches_df["FTAG"].values > 0)).astype(int)
 
-    X = feature_matrix.values.astype(float)
-    col_medians = np.nanmedian(X, axis=0)
-    for j in range(X.shape[1]):
-        mask = np.isnan(X[:, j])
-        X[mask, j] = col_medians[j] if not np.isnan(col_medians[j]) else 0.0
+    X_base = feature_matrix.values.astype(float)
+    col_medians = np.nanmedian(X_base, axis=0)
+    for j in range(X_base.shape[1]):
+        mask = np.isnan(X_base[:, j])
+        X_base[mask, j] = col_medians[j] if not np.isnan(col_medians[j]) else 0.0
 
-    logger.info(f"Feature matrix: {X.shape}")
+    logger.info(f"Base feature matrix: {X_base.shape}")
 
-    # ---- STEP 2: Pre-compute Poisson predictions for each fold ----
-    logger.info("Pre-computing Poisson predictions for each fold...")
+    # ---- STEP 2: Pre-compute Poisson stacking features for each fold ----
+    logger.info("Pre-computing Poisson stacking features for each fold...")
     cv = WalkForwardCV(n_splits=2, min_train_seasons=3)
-    poisson_proba_folds = []
+    fold_data = []
 
     for fold_num, (train_idx, val_idx) in enumerate(cv.split(matches_df)):
         train_idx_arr = np.array(train_idx)
@@ -197,17 +208,14 @@ if __name__ == "__main__":
         ]
         poisson_model.fit(train_matches)
 
-        poisson_proba = np.zeros((len(val_idx_arr), 3))
-        for k, vi in enumerate(val_idx_arr):
-            home = matches_df.iloc[vi]["home_team_id"]
-            away = matches_df.iloc[vi]["away_team_id"]
-            poisson_proba[k] = poisson_model.predict_proba_1x2(home, away)
-        poisson_proba_folds.append(poisson_proba)
+        poisson_train = compute_poisson_features(poisson_model, matches_df, train_idx_arr)
+        poisson_val = compute_poisson_features(poisson_model, matches_df, val_idx_arr)
+        fold_data.append((train_idx_arr, val_idx_arr, poisson_train, poisson_val))
 
-    logger.info("Poisson predictions cached for all folds.")
+    logger.info("Poisson stacking features cached for all folds.")
 
     # ---- STEP 3: Grid search over XGBoost params ----
-    configs = generate_configs(PARAM_GRID, max_configs=20)
+    configs = generate_configs(PARAM_GRID, max_configs=30)
     logger.info(f"Testing {len(configs)} hyperparameter configurations...")
 
     results = []
@@ -217,8 +225,8 @@ if __name__ == "__main__":
 
         try:
             rps, acc = evaluate_config(
-                config, X, y_1x2, y_1x2_encoded, y_ou, y_btts,
-                matches_df, poisson_proba_folds,
+                config, X_base, y_1x2, y_1x2_encoded, y_ou, y_btts,
+                matches_df, fold_data,
             )
             results.append({"config": config, "rps": rps, "accuracy": acc})
             logger.info(f"  -> RPS={rps:.4f}, Acc={acc:.3f}")
