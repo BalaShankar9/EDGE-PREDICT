@@ -1,29 +1,31 @@
 """Feature assembly pipeline.
 
-Orchestrates all FeatureGroups to produce the full 50-feature matrix
+Orchestrates all FeatureGroups to produce the full 46-feature matrix
 from raw match data + supplementary DataFrames.
+
+Note: XGPerformanceFeatures and MetaPredictionFeatures are excluded
+because they produce 100% NaN (no xG or competitor prediction data available).
+Re-enable them once Understat xG and competitor prediction data are ingested.
 """
 import logging
 import pandas as pd
 import numpy as np
 from sharpedge.ml.features.form import FormFeatures
 from sharpedge.ml.features.elo import EloFeatures
-from sharpedge.ml.features.xg_perf import XGPerformanceFeatures
 from sharpedge.ml.features.h2h import H2HFeatures
 from sharpedge.ml.features.market import MarketFeatures
 from sharpedge.ml.features.context import ContextFeatures
-from sharpedge.ml.features.meta import MetaPredictionFeatures
+from sharpedge.ml.features.shots import ShotFeatures
 
 logger = logging.getLogger(__name__)
 
 ALL_GROUPS = [
-    FormFeatures,
-    EloFeatures,
-    XGPerformanceFeatures,
-    H2HFeatures,
-    MarketFeatures,
-    ContextFeatures,
-    MetaPredictionFeatures,
+    FormFeatures,       # 12 features
+    EloFeatures,        # 6 features
+    H2HFeatures,        # 6 features
+    MarketFeatures,     # 8 features
+    ContextFeatures,    # 6 features
+    ShotFeatures,       # 8 features
 ]
 
 

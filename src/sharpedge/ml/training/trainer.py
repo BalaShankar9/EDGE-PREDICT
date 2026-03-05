@@ -49,14 +49,14 @@ class ModelTrainer:
         calibration_method: str = "platt",
     ):
         self.xgb_params = xgb_params or {
-            "n_estimators": 500,
-            "max_depth": 5,
-            "learning_rate": 0.03,
+            "n_estimators": 300,
+            "max_depth": 4,
+            "learning_rate": 0.01,
             "subsample": 0.8,
-            "colsample_bytree": 0.7,
+            "colsample_bytree": 0.8,
             "min_child_weight": 10,
-            "reg_alpha": 0.5,
-            "reg_lambda": 2.0,
+            "reg_alpha": 1.0,
+            "reg_lambda": 1.0,
             "random_state": 42,
         }
         self.n_splits = n_splits

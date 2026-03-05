@@ -51,10 +51,19 @@ class UnderstatCollector(BaseCollector):
             Season starting year (e.g. 2024). If None, collects 2020-2025.
         """
         league: Optional[str] = kwargs.get("league")
-        season: Optional[int] = kwargs.get("season")
+        season_raw = kwargs.get("season")
 
         leagues = {league: LEAGUE_CODES[league]} if league else LEAGUE_CODES
-        seasons = [season] if season else DEFAULT_SEASONS
+
+        # Convert season label "2023-24" → starting year 2023
+        if season_raw is not None:
+            if isinstance(season_raw, str) and "-" in season_raw:
+                season_int = int(season_raw.split("-")[0])
+            else:
+                season_int = int(season_raw)
+            seasons = [season_int]
+        else:
+            seasons = DEFAULT_SEASONS
 
         frames: list[pd.DataFrame] = []
 
