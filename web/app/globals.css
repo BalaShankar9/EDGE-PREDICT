@@ -95,6 +95,183 @@
   --sidebar-ring: hsl(166 100% 42%);
 }
 
+/* ========== KEYFRAME ANIMATIONS ========== */
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 212, 170, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 212, 170, 0.5), 0 0 40px rgba(0, 212, 170, 0.15); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes slide-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(0, 212, 170, 0.3); }
+  50% { border-color: rgba(0, 212, 170, 0.6); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ========== UTILITY CLASSES ========== */
+
+.glass-card {
+  background: rgba(18, 18, 26, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glow-border {
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #00d4aa 0%, #6366f1 50%, #00d4aa 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.stat-glow {
+  text-shadow: 0 0 20px rgba(0, 212, 170, 0.4), 0 0 40px rgba(0, 212, 170, 0.1);
+}
+
+/* ========== TIER GLOW EFFECTS ========== */
+
+.tier-platinum {
+  box-shadow: 0 0 12px rgba(229, 231, 235, 0.15), 0 0 4px rgba(229, 231, 235, 0.1);
+  border-color: rgba(229, 231, 235, 0.3);
+}
+.tier-platinum:hover {
+  box-shadow: 0 0 20px rgba(229, 231, 235, 0.25), 0 0 8px rgba(229, 231, 235, 0.15);
+}
+
+.tier-gold {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15), 0 0 4px rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.tier-gold:hover {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25), 0 0 8px rgba(245, 158, 11, 0.15);
+}
+
+.tier-silver {
+  box-shadow: 0 0 12px rgba(156, 163, 175, 0.12), 0 0 4px rgba(156, 163, 175, 0.08);
+  border-color: rgba(156, 163, 175, 0.3);
+}
+.tier-silver:hover {
+  box-shadow: 0 0 20px rgba(156, 163, 175, 0.2), 0 0 8px rgba(156, 163, 175, 0.12);
+}
+
+/* ========== SCROLLBAR STYLING ========== */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a1a2e;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2a3e;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1a1a2e #0a0a0f;
+}
+
+/* ========== SELECTION COLOR ========== */
+
+::selection {
+  background: rgba(0, 212, 170, 0.3);
+  color: #f1f5f9;
+}
+
+/* ========== TICKER ========== */
+
+.ticker-animate {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+/* ========== SLIDE IN ANIMATION UTILITIES ========== */
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.6s ease-out forwards;
+}
+.animate-slide-in-up-delay-1 {
+  animation: slide-in-up 0.6s ease-out 0.1s forwards;
+  opacity: 0;
+}
+.animate-slide-in-up-delay-2 {
+  animation: slide-in-up 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+.animate-slide-in-up-delay-3 {
+  animation: slide-in-up 0.6s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

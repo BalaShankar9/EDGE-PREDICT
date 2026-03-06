@@ -1,8 +1,8 @@
-import { StatCard } from "@/components/shared/stat-card";
 import { TierFilter } from "@/components/picks/tier-filter";
 import { ResultsList } from "@/components/picks/results-list";
+import { HeroSection } from "@/components/home/hero-section";
+import { LivePredictionsTable } from "@/components/home/live-predictions-table";
 import { getPicksToday, getPicksHistory, getTrackRecord } from "@/lib/api";
-import { formatPercent } from "@/lib/utils";
 
 export const revalidate = 300;
 
@@ -21,24 +21,37 @@ export default async function HomePage() {
     // Graceful degradation — show empty state
   }
 
-  const platinumWinRate = trackRecord?.by_tier?.Platinum?.win_rate;
-  const monthlyRoi = trackRecord?.overall?.roi;
+  const winRate = trackRecord?.overall?.win_rate ?? trackRecord?.win_rate ?? null;
+  const roi = trackRecord?.overall?.roi ?? trackRecord?.roi ?? null;
+  const totalPicks = trackRecord?.overall?.total_picks ?? trackRecord?.total_picks ?? 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Today's Picks" value={String(picks.length)} />
-        <StatCard label="Platinum Accuracy" value={platinumWinRate ? formatPercent(platinumWinRate) : "—"} />
-        <StatCard label="Overall ROI" value={monthlyRoi != null ? `${monthlyRoi > 0 ? "+" : ""}${monthlyRoi.toFixed(1)}%` : "—"} />
-      </div>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Hero */}
+      <HeroSection totalPicks={totalPicks} winRate={winRate} roi={roi} />
 
-      <h2 className="text-2xl font-bold text-text-primary mb-6">Today&apos;s Picks</h2>
-      <TierFilter picks={picks} />
-
-      {recentResults.length > 0 && (
-        <div className="mt-12">
-          <ResultsList picks={recentResults} />
+      {/* Today's Picks */}
+      <section className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-1 h-6 bg-accent-primary" />
+          <h2 className="text-2xl font-bold text-text-primary">Today&apos;s Picks</h2>
+          <span className="text-sm text-text-secondary ml-auto tabular-nums">{picks.length} picks</span>
         </div>
+        <TierFilter picks={picks} />
+      </section>
+
+      {/* Live Predictions Table */}
+      {picks.length > 0 && (
+        <section className="mb-12 animate-slide-in-up-delay-3">
+          <LivePredictionsTable picks={picks} />
+        </section>
+      )}
+
+      {/* Recent Results */}
+      {recentResults.length > 0 && (
+        <section className="mb-12">
+          <ResultsList picks={recentResults} />
+        </section>
       )}
     </div>
   );

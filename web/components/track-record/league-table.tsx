@@ -10,33 +10,44 @@ export function LeagueTable({ byLeague }: LeagueTableProps) {
     .map(([name, stats]) => ({ name, ...stats }))
     .sort((a, b) => b.total_picks - a.total_picks);
 
+  const maxPicks = Math.max(...leagues.map((l) => l.total_picks), 1);
+
   return (
-    <div className="bg-bg-surface border border-border overflow-x-auto">
+    <div className="glass-card overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-text-secondary border-b border-border">
-            <th className="text-left py-3 px-4">League</th>
-            <th className="text-right py-3 px-4">W-L</th>
-            <th className="text-right py-3 px-4">Win Rate</th>
-            <th className="text-right py-3 px-4">Profit</th>
-            <th className="text-right py-3 px-4">ROI</th>
+          <tr className="text-text-secondary border-b border-white/5">
+            <th className="text-left py-3 px-5 font-medium">League</th>
+            <th className="text-right py-3 px-5 font-medium">W-L</th>
+            <th className="text-right py-3 px-5 font-medium">Win Rate</th>
+            <th className="text-right py-3 px-5 font-medium">Profit</th>
+            <th className="text-right py-3 px-5 font-medium">ROI</th>
           </tr>
         </thead>
         <tbody>
           {leagues.map((league) => (
-            <tr key={league.name} className="border-b border-border">
-              <td className="py-3 px-4 text-text-primary font-medium">
-                {league.name}
+            <tr key={league.name} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+              <td className="py-3 px-5">
+                <div>
+                  <span className="text-text-primary font-medium">{league.name}</span>
+                  {/* Mini bar for relative volume */}
+                  <div className="w-20 h-1 bg-bg-elevated mt-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-accent-primary/40"
+                      style={{ width: `${(league.total_picks / maxPicks) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </td>
-              <td className="py-3 px-4 text-right tabular-nums text-text-primary">
+              <td className="py-3 px-5 text-right tabular-nums text-text-primary">
                 {league.wins}-{league.losses}
               </td>
-              <td className="py-3 px-4 text-right tabular-nums text-text-primary">
+              <td className="py-3 px-5 text-right tabular-nums text-text-primary">
                 {formatPercent(league.win_rate)}
               </td>
               <td
                 className={cn(
-                  "py-3 px-4 text-right tabular-nums font-medium",
+                  "py-3 px-5 text-right tabular-nums font-medium",
                   league.total_profit >= 0 ? "text-success" : "text-danger"
                 )}
               >
@@ -44,7 +55,7 @@ export function LeagueTable({ byLeague }: LeagueTableProps) {
               </td>
               <td
                 className={cn(
-                  "py-3 px-4 text-right tabular-nums",
+                  "py-3 px-5 text-right tabular-nums",
                   league.roi >= 0 ? "text-success" : "text-danger"
                 )}
               >
