@@ -1,17 +1,45 @@
-"""5-stage banker tip filter pipeline.
+"""Confidence-based banker filter pipeline.
 
-Selects high-confidence, high-value picks from model predictions.
+Selects high-confidence picks based on empirically-validated thresholds.
 
-Stage 1: Minimum Confidence (model_prob >= 0.70)
-Stage 2: Model Agreement (spread <= 0.08)
-Stage 3: Value Edge (edge >= 0.05)
-Stage 4: Meta-Model Confirmation (>= 2 competitor sites agree)
-Stage 5: Risk Flag Check (no critical flags)
+Empirical accuracy by confidence threshold (walk-forward validation, 3504 matches):
+  >= 0.55: 67.7% acc (45% of matches)
+  >= 0.60: 72.3% acc (33% of matches)
+  >= 0.65: 75.7% acc (24% of matches)
+  >= 0.70: 77.0% acc (21% of matches)
+  >= 0.75: 82.1% acc (9% of matches)
+  >= 0.80: 83.2% acc (4% of matches)
+  >= 0.85: 89.4% acc (2% of matches)
+
+Stages:
+  Stage 1: Market whitelist (only backtest-profitable markets)
+  Stage 2: Odds ceiling (reject longshots > MAX_ODDS)
+  Stage 3: Per-market confidence (backtest-optimized thresholds)
+  Stage 4: Value edge (model_prob - implied_prob >= min_edge)
+  Stage 5: Risk flag check (no CRITICAL flags)
 """
 from dataclasses import dataclass, field
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Markets proven profitable in walk-forward backtest
+PROFITABLE_MARKETS = frozenset({
+    "1x2_home", "1x2_away", "1x2_draw",
+    "over_25", "dc_x2",
+})
+
+# Per-market confidence thresholds (backtest-optimized)
+MARKET_THRESHOLDS = {
+    "1x2_home": 0.58,   # Home needs higher bar (52.9% acc, -7.6% ROI at low thresholds)
+    "1x2_away": 0.50,   # Away is strongest (+3.9% ROI)
+    "1x2_draw": 0.50,   # Rare but profitable when predicted
+    "over_25": 0.55,    # O/U needs moderate confidence
+    "dc_x2": 0.65,      # DC X2 needs high confidence (+0.3% ROI at 65%+)
+}
+
+# Maximum odds (backtest: odds > 2.50 -> -11.3% ROI)
+MAX_ODDS = 2.50
 
 
 @dataclass
@@ -24,41 +52,50 @@ class Pick:
     match_date: str
     market: str           # "1x2_home", "1x2_away", "1x2_draw", "over_25", "btts_yes"
     model_prob: float
-    model_spread: float   # spread across ensemble models
+    model_spread: float   # spread between top two probabilities
     best_odds: float
     bookmaker: str
     implied_prob: float   # 1 / best_odds
     edge: float           # model_prob - implied_prob
     tier: str = ""        # Set by TierAssigner
     meta_agreement: int = 0
+    pick_odds: float = 0.0       # Odds at time of pick (for CLV tracking)
+    closing_odds: float = 0.0    # Closing odds (filled post-match for CLV)
+    clv_pct: float = 0.0         # CLV% = (closing_implied/pick_implied - 1) * 100
     risk_flags: list[str] = field(default_factory=list)
     confidence_factors: list[str] = field(default_factory=list)
 
 
 class BankerFilter:
-    """5-stage filter that selects high-confidence, high-value picks."""
+    """Confidence-based filter using empirically-validated thresholds."""
 
     def __init__(
         self,
-        min_confidence: float = 0.70,
-        max_spread: float = 0.08,
+        min_confidence: float = 0.50,
         min_edge: float = 0.05,
-        min_meta_agreement: int = 2,
+        max_odds: float = MAX_ODDS,
     ):
         self.min_confidence = min_confidence
-        self.max_spread = max_spread
         self.min_edge = min_edge
-        self.min_meta_agreement = min_meta_agreement
+        self.max_odds = max_odds
 
     def filter(self, predictions: list[dict]) -> list[Pick]:
-        """Apply all 5 filters in sequence.
+        """Apply backtest-proven filters in order.
+
+        Stages
+        ------
+        1. Market whitelist  -- reject if market not in PROFITABLE_MARKETS
+        2. Odds ceiling      -- reject if best_odds > max_odds or <= 0
+        3. Per-market conf.  -- use max(MARKET_THRESHOLDS[market], min_confidence)
+        4. Value edge        -- model_prob - implied_prob >= min_edge
+        5. Risk flag check   -- reject if any CRITICAL flags
 
         Parameters
         ----------
         predictions : list of dicts with keys:
             match_id, home_team, away_team, league, match_date, market,
             model_prob, model_spread, best_odds, bookmaker,
-            meta_agreement, risk_flags
+            meta_agreement (optional), risk_flags (optional)
 
         Returns
         -------
@@ -67,29 +104,31 @@ class BankerFilter:
         picks = []
 
         for pred in predictions:
-            implied_prob = 1.0 / pred["best_odds"] if pred["best_odds"] > 0 else 1.0
-            edge = pred["model_prob"] - implied_prob
+            market = pred["market"]
             confidence_factors = []
 
-            # Stage 1: Minimum confidence
-            if pred["model_prob"] < self.min_confidence:
+            # Stage 1: Market whitelist
+            if market not in PROFITABLE_MARKETS:
+                continue
+
+            # Stage 2: Odds ceiling
+            best_odds = pred["best_odds"]
+            if best_odds <= 0 or best_odds > self.max_odds:
+                continue
+
+            # Stage 3: Per-market confidence threshold
+            market_threshold = MARKET_THRESHOLDS.get(market, self.min_confidence)
+            effective_threshold = max(market_threshold, self.min_confidence)
+            if pred["model_prob"] < effective_threshold:
                 continue
             confidence_factors.append(f"prob={pred['model_prob']:.2f}")
 
-            # Stage 2: Model agreement (low spread)
-            if pred["model_spread"] > self.max_spread:
-                continue
-            confidence_factors.append(f"spread={pred['model_spread']:.3f}")
-
-            # Stage 3: Value edge
+            # Stage 4: Value edge
+            implied_prob = 1.0 / best_odds
+            edge = pred["model_prob"] - implied_prob
             if edge < self.min_edge:
                 continue
             confidence_factors.append(f"edge={edge:.3f}")
-
-            # Stage 4: Meta-model confirmation
-            if pred.get("meta_agreement", 0) < self.min_meta_agreement:
-                continue
-            confidence_factors.append(f"meta={pred['meta_agreement']}")
 
             # Stage 5: Risk flag check
             risk_flags = pred.get("risk_flags", [])
@@ -97,19 +136,23 @@ class BankerFilter:
             if critical_flags:
                 continue
 
+            model_spread = pred.get("model_spread", 0.0)
+            confidence_factors.append(f"spread={model_spread:.3f}")
+
             pick = Pick(
                 match_id=pred["match_id"],
                 home_team=pred["home_team"],
                 away_team=pred["away_team"],
                 league=pred["league"],
                 match_date=pred["match_date"],
-                market=pred["market"],
+                market=market,
                 model_prob=pred["model_prob"],
-                model_spread=pred["model_spread"],
-                best_odds=pred["best_odds"],
+                model_spread=model_spread,
+                best_odds=best_odds,
                 bookmaker=pred.get("bookmaker", "unknown"),
                 implied_prob=implied_prob,
                 edge=edge,
+                pick_odds=best_odds,  # Record for CLV tracking
                 meta_agreement=pred.get("meta_agreement", 0),
                 risk_flags=risk_flags,
                 confidence_factors=confidence_factors,
