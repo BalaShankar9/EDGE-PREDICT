@@ -14,3 +14,4 @@ htmlcov/
 data/cache/
 mlruns/
 models/
+!src/**/models/
