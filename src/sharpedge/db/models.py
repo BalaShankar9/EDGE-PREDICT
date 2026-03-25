@@ -14,6 +14,7 @@ from sqlalchemy import (
     Index,
     Text,
     JSON,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -49,7 +50,11 @@ class League(Base):
     fbref_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     understat_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     season_format: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    sport_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("sports.id"), nullable=True
+    )
 
+    sport: Mapped[Optional["Sport"]] = relationship("Sport", back_populates="leagues")
     seasons: Mapped[List["Season"]] = relationship("Season", back_populates="league")
 
 
@@ -341,3 +346,97 @@ class DailyPick(Base):
 
     pipeline_run: Mapped["PipelineRun"] = relationship("PipelineRun", back_populates="picks")
     prediction: Mapped["Prediction"] = relationship("Prediction", back_populates="picks")
+
+
+# ---------------------------------------------------------------------------
+# Multi-sport & Agent tracking tables (Task A4)
+# ---------------------------------------------------------------------------
+
+
+class Sport(Base):
+    """Registered sports."""
+
+    __tablename__ = "sports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    slug: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+    leagues: Mapped[List["League"]] = relationship("League", back_populates="sport")
+
+
+class Agent(Base):
+    """Registered prediction agents."""
+
+    __tablename__ = "agents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    agent_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+    predictions: Mapped[List["AgentPrediction"]] = relationship(
+        "AgentPrediction", back_populates="agent"
+    )
+    performance_snapshots: Mapped[List["AgentPerformance"]] = relationship(
+        "AgentPerformance", back_populates="agent"
+    )
+
+
+class AgentPrediction(Base):
+    """Individual agent predictions for performance tracking."""
+
+    __tablename__ = "agent_predictions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    agent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("agents.id"), nullable=False
+    )
+    sport_slug: Mapped[str] = mapped_column(String(50), nullable=False)
+    match_date: Mapped[date] = mapped_column(Date, nullable=False)
+    home_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    away_team: Mapped[str] = mapped_column(String(200), nullable=False)
+    market: Mapped[str] = mapped_column(String(50), nullable=False)
+    predicted_outcome: Mapped[str] = mapped_column(String(50), nullable=False)
+    probabilities: Mapped[dict] = mapped_column(JSON, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    reasoning: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    actual_outcome: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    correct: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+    agent: Mapped["Agent"] = relationship("Agent", back_populates="predictions")
+
+
+class AgentPerformance(Base):
+    """Rolling agent performance metrics (daily snapshot)."""
+
+    __tablename__ = "agent_performance"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    agent_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("agents.id"), nullable=False
+    )
+    sport_slug: Mapped[str] = mapped_column(String(50), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    window_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    total_bets: Mapped[int] = mapped_column(Integer, default=0)
+    wins: Mapped[int] = mapped_column(Integer, default=0)
+    roi_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    clv_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    avg_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    brier_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    agent: Mapped["Agent"] = relationship("Agent", back_populates="performance_snapshots")
