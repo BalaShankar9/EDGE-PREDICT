@@ -12,17 +12,19 @@ def ranked_probability_score(
     y_true: NDArray[np.int_],
     y_prob: NDArray[np.float64],
 ) -> float:
-    """Compute mean Ranked Probability Score for 1X2 predictions.
+    """Compute mean Ranked Probability Score for ordered categorical predictions.
 
     RPS measures the distance between predicted cumulative probabilities
     and observed cumulative outcomes. Lower is better. Range: [0, 1].
 
+    Works for any number of outcome classes (2 for tennis, 3 for football, etc.).
+
     Parameters
     ----------
     y_true : array of shape (n_samples,)
-        True outcomes encoded as 0=Home, 1=Draw, 2=Away.
-    y_prob : array of shape (n_samples, 3)
-        Predicted probabilities [P(Home), P(Draw), P(Away)].
+        True outcomes as integer class indices (0, 1, ..., K-1).
+    y_prob : array of shape (n_samples, K)
+        Predicted probabilities for each of the K outcomes.
 
     Returns
     -------
@@ -30,13 +32,14 @@ def ranked_probability_score(
         Mean RPS across all samples.
     """
     n = len(y_true)
+    k = y_prob.shape[1]  # number of outcome classes
     rps_sum = 0.0
     for i in range(n):
-        outcome = np.zeros(3)
+        outcome = np.zeros(k)
         outcome[y_true[i]] = 1.0
         cum_pred = np.cumsum(y_prob[i])
         cum_true = np.cumsum(outcome)
-        rps_sum += np.sum((cum_pred - cum_true) ** 2) / 2.0
+        rps_sum += np.sum((cum_pred - cum_true) ** 2) / (k - 1)
     return rps_sum / n
 
 
