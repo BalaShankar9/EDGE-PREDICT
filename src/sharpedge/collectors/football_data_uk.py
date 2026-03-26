@@ -16,13 +16,23 @@ from sharpedge.collectors.base import BaseCollector
 
 logger = logging.getLogger(__name__)
 
-# Big 5 European league codes used by football-data.co.uk
+# European league codes used by football-data.co.uk
+# Big 5 + 7 expansion leagues with full Pinnacle odds coverage
 LEAGUE_CODES: dict[str, str] = {
+    # Big 5
     "Premier League": "E0",
     "La Liga": "SP1",
     "Bundesliga": "D1",
     "Serie A": "I1",
     "Ligue 1": "F1",
+    # Expansion leagues (all have full odds on football-data.co.uk)
+    "Eredivisie": "N1",
+    "Liga Portugal": "P1",
+    "Belgian Pro League": "B1",
+    "Turkish Super Lig": "T1",
+    "Scottish Premiership": "SC0",
+    "Super League Greece": "G1",
+    "Championship": "EC",
 }
 
 # Season label -> URL code mapping (last 5 seasons)
@@ -43,12 +53,22 @@ _KEEP_COLUMNS = [
     "HS", "AS", "HST", "AST",
     "HF", "AF", "HC", "AC",
     "HY", "AY", "HR", "AR",
-    # Bookmaker odds
+    # Bookmaker odds — 1X2
     "B365H", "B365D", "B365A",
     "PSH", "PSD", "PSA",
     "WHH", "WHD", "WHA",
     "MaxH", "MaxD", "MaxA",
     "AvgH", "AvgD", "AvgA",
+    # Over/Under 2.5
+    "B365>2.5", "B365<2.5",
+    "P>2.5", "P<2.5",
+    "Max>2.5", "Max<2.5",
+    "Avg>2.5", "Avg<2.5",
+    # Asian Handicap
+    "AHh", "B365AHH", "B365AHA",
+    "PAHH", "PAHA",
+    "MaxAHH", "MaxAHA",
+    "AvgAHH", "AvgAHA",
 ]
 
 
@@ -96,20 +116,30 @@ class FootballDataUKCollector(BaseCollector):
                     response = self._fetch(url)
                     df = pd.read_csv(io.StringIO(response.text))
 
+                    # Drop rows with missing team names (trailing CSV rows)
+                    df = df.dropna(subset=["HomeTeam", "AwayTeam"])
+                    df = df[df["HomeTeam"].astype(str).str.strip() != ""]
+
                     # Keep only available columns from our desired list
                     available = [c for c in _KEEP_COLUMNS if c in df.columns]
                     df = df[available]
+
+                    # Rename to match schema
+                    if "Date" in df.columns:
+                        df = df.rename(columns={"Date": "match_date"})
 
                     # Add metadata columns
                     df["league"] = league_name
                     df["season"] = season_label
 
-                    # Normalise team names
+                    # Normalise team names (fallback to slugified raw name)
                     df["home_team_id"] = df["HomeTeam"].apply(
                         lambda x: self.normalise_team(str(x))
+                        or str(x).lower().replace(" ", "_").replace(".", "")
                     )
                     df["away_team_id"] = df["AwayTeam"].apply(
                         lambda x: self.normalise_team(str(x))
+                        or str(x).lower().replace(" ", "_").replace(".", "")
                     )
 
                     # Cache the parsed data
