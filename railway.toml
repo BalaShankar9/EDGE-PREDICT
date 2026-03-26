@@ -1,0 +1,10 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "pip install -e '.[ml,api]'"
+
+[deploy]
+startCommand = "uvicorn sharpedge.api.app:create_app --host 0.0.0.0 --port ${PORT:-8000} --factory"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
