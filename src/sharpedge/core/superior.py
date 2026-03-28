@@ -68,8 +68,9 @@ class SuperiorPredictor:
     def __init__(self) -> None:
         self._models: dict = {}
         self._fitted: bool = False
-        self._draw_floor: float = 0.20  # adaptive per league
+        self._draw_floor: float = 0.20  # fallback; overwritten by actual training rate
         self._league_draw_rates: dict[str, float] = {}
+        self._team_ratings: dict = {}  # OpenSkill ratings
 
     # ------------------------------------------------------------------
     # Training
@@ -175,6 +176,48 @@ class SuperiorPredictor:
                     self._league_draw_rates[league] = float(
                         (train_df.loc[mask, "FTR"] == "D").mean()
                     )
+                # Set global fallback to the ACTUAL overall draw rate
+                if "FTR" in train_df.columns:
+                    self._draw_floor = float((train_df["FTR"] == "D").mean())
+                    logger.info(
+                        "Draw floor: overall=%.3f, per-league=%s",
+                        self._draw_floor,
+                        {k: round(v, 3) for k, v in sorted(self._league_draw_rates.items())},
+                    )
+
+        # 7. OpenSkill ratings (uncertainty-aware Elo alternative)
+        try:
+            from openskill.models import PlackettLuce
+
+            os_model = PlackettLuce()
+            self._team_ratings = {}
+            for match in train_matches:
+                h, a = match["home_team_id"], match["away_team_id"]
+                if h not in self._team_ratings:
+                    self._team_ratings[h] = os_model.rating()
+                if a not in self._team_ratings:
+                    self._team_ratings[a] = os_model.rating()
+
+                hg, ag = match["home_goals"], match["away_goals"]
+                if hg > ag:
+                    ranks = [1, 2]
+                elif ag > hg:
+                    ranks = [2, 1]
+                else:
+                    ranks = [1, 1]
+
+                teams = [[self._team_ratings[h]], [self._team_ratings[a]]]
+                new_ratings = os_model.rate(teams, ranks=ranks)
+                self._team_ratings[h] = new_ratings[0][0]
+                self._team_ratings[a] = new_ratings[1][0]
+
+            logger.info("OpenSkill ratings computed for %d teams", len(self._team_ratings))
+        except ImportError:
+            logger.info("OpenSkill not available")
+            self._team_ratings = {}
+        except Exception as e:
+            logger.warning("OpenSkill failed: %s", e)
+            self._team_ratings = {}
 
         self._fitted = True
         logger.info("SuperiorPredictor fitted with %d models", len(self._models))
@@ -240,6 +283,25 @@ class SuperiorPredictor:
         if bvp is not None:
             model_probs["bvp"] = bvp.predict_proba_1x2(home_team, away_team)
 
+        # OpenSkill prediction
+        if self._team_ratings:
+            h_rating = self._team_ratings.get(home_team)
+            a_rating = self._team_ratings.get(away_team)
+            if h_rating and a_rating:
+                try:
+                    from openskill.models import PlackettLuce
+
+                    pl = PlackettLuce()
+                    win_prob = pl.predict_win([[h_rating], [a_rating]])
+                    # win_prob gives [P(home wins), P(away wins)]
+                    # Discount for draws
+                    os_home = win_prob[0] * 0.75
+                    os_away = win_prob[1] * 0.75
+                    os_draw = 1.0 - os_home - os_away
+                    model_probs["openskill"] = np.array([os_home, os_draw, os_away])
+                except Exception:
+                    pass
+
         if not model_probs:
             raise ValueError("No model predictions available")
 
@@ -247,12 +309,13 @@ class SuperiorPredictor:
         # Weighted blend (optimized weights from V2)
         # ----------------------------------------------------------
         weights = {
-            "xgb": 0.25,
-            "catboost": 0.15,
-            "lgbm": 0.15,
-            "dc": 0.20,
-            "bvp": 0.10,
-            "tabpfn": 0.15,
+            "xgb": 0.22,
+            "catboost": 0.14,
+            "lgbm": 0.14,
+            "dc": 0.18,
+            "bvp": 0.08,
+            "tabpfn": 0.12,
+            "openskill": 0.12,
         }
         blended = np.zeros(3)
         total_w = 0.0
@@ -314,7 +377,7 @@ class SuperiorPredictor:
         if odds:
             # Devig with goto_conversion (from Kaggle gold medal)
             try:
-                from goto_conversion import Goto
+                from goto_conversion import goto_conversion as goto_convert
 
                 raw_odds = [
                     odds.get("home", 0),
@@ -322,8 +385,7 @@ class SuperiorPredictor:
                     odds.get("away", 0),
                 ]
                 if all(o > 1 for o in raw_odds):
-                    g = Goto()
-                    goto_p = g.convert(raw_odds)
+                    goto_p = goto_convert(raw_odds)
                     goto = {
                         "Home": goto_p[0],
                         "Draw": goto_p[1],
@@ -365,9 +427,21 @@ class SuperiorPredictor:
                 is_value = edge >= 0.05 and float(final[pred_idx]) >= 0.50
 
                 if is_value:
-                    b = bet_odds - 1
-                    raw_kelly = (float(final[pred_idx]) * b - (1 - float(final[pred_idx]))) / b
-                    kelly = max(0, raw_kelly * 0.25) * 100  # quarter Kelly as %
+                    # Use AntifragileStaking instead of raw Kelly
+                    try:
+                        from sharpedge.execution.staking import AntifragileStaking
+
+                        staker = AntifragileStaking(bankroll=1000.0)
+                        stake_rec = staker.compute_stake(
+                            match_id=f"{home_team}_vs_{away_team}",
+                            prob=float(final[pred_idx]),
+                            odds=bet_odds,
+                        )
+                        kelly = stake_rec.stake_pct * 100
+                    except Exception:
+                        b = bet_odds - 1
+                        raw_kelly = (float(final[pred_idx]) * b - (1 - float(final[pred_idx]))) / b
+                        kelly = max(0, raw_kelly * 0.25) * 100  # quarter Kelly as %
 
         # ----------------------------------------------------------
         # Build reasoning
@@ -388,6 +462,19 @@ class SuperiorPredictor:
             risk_factors.append("High MC uncertainty")
         if entropy > 1.0:
             risk_factors.append("High prediction entropy")
+
+        # Intelligence Bureau context
+        try:
+            from sharpedge.intelligence.motivation_context import MotivationScorer
+
+            motivation = MotivationScorer()
+            mot_features = motivation.compute_features(sport="football")
+            if mot_features.get("mot_derby_flag"):
+                conf_factors.append("Derby match — high intensity")
+            if mot_features.get("mot_dead_rubber_flag"):
+                risk_factors.append("Dead rubber — low motivation")
+        except Exception:
+            pass
 
         reasoning = (
             f"{outcomes[pred_idx]} @ {final[pred_idx]:.1%} | "

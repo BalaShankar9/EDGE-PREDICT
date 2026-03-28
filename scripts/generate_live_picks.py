@@ -4,6 +4,9 @@
 This is the PRODUCTION pipeline that finds real value bets by comparing
 model probabilities against current bookmaker odds.
 
+Uses SuperiorPredictor — the full ensemble with OpenSkill, TabPFN,
+adaptive draw floors, AntifragileStaking, and Intelligence Bureau context.
+
 Usage:
     .venv/bin/python scripts/generate_live_picks.py
     .venv/bin/python scripts/generate_live_picks.py --days 3
@@ -12,7 +15,6 @@ import argparse
 import json
 import logging
 import sys
-import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -25,22 +27,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from sharpedge.ml.data_loader import load_historical_matches
 from sharpedge.ml.features.pipeline import FeaturePipeline
 from sharpedge.ml.models.poisson_model import PoissonPredictor
-from sharpedge.ml.models.xgboost_model import XGBoostPredictor
-from sharpedge.ml.models.bivariate_poisson import BivariatePoissonPredictor
-from sharpedge.core.monte_carlo import monte_carlo_simulate
-from sharpedge.core.consensus import compute_consensus
-
-try:
-    from sharpedge.ml.models.catboost_model import CatBoostPredictor
-    HAS_CATBOOST = True
-except ImportError:
-    HAS_CATBOOST = False
-
-try:
-    from sharpedge.ml.models.lightgbm_model import LightGBMPredictor
-    HAS_LIGHTGBM = True
-except ImportError:
-    HAS_LIGHTGBM = False
+from sharpedge.core.superior import SuperiorPredictor
 
 # Logger
 logger = logging.getLogger("live_picks")
@@ -56,11 +43,7 @@ logger.addHandler(fh)
 
 
 def fetch_upcoming_fixtures(days_ahead: int = 7) -> pd.DataFrame:
-    """Fetch upcoming fixtures from football-data.org.
-
-    The collector fetches ALL scheduled matches; we filter to the
-    requested window here.
-    """
+    """Fetch upcoming fixtures from football-data.org."""
     from sharpedge.collectors.football_data_org import FootballDataOrgCollector
 
     collector = FootballDataOrgCollector()
@@ -69,7 +52,6 @@ def fetch_upcoming_fixtures(days_ahead: int = 7) -> pd.DataFrame:
         logger.warning("No upcoming fixtures found")
         return pd.DataFrame()
 
-    # Filter to requested date window
     df["match_date"] = pd.to_datetime(df["match_date"], utc=True, errors="coerce")
     now = datetime.now(timezone.utc)
     cutoff = now + timedelta(days=days_ahead)
@@ -85,7 +67,6 @@ def fetch_current_odds(fixtures_df: pd.DataFrame) -> dict:
 
     Returns dict mapping (home_team, away_team) -> {home: odds, draw: odds, away: odds}
     """
-    # Try The Odds API if available
     try:
         from sharpedge.collectors.odds_api import OddsAPICollector
         from sharpedge.config import settings
@@ -111,9 +92,12 @@ def fetch_current_odds(fixtures_df: pd.DataFrame) -> dict:
     return {}
 
 
-def train_production_model(df: pd.DataFrame):
-    """Train all models on the FULL historical dataset."""
-    logger.info(f"Training on {len(df)} matches...")
+def train_superior_predictor(df: pd.DataFrame):
+    """Train SuperiorPredictor on the FULL historical dataset.
+
+    Returns (predictor, pipeline, dc_model) so we can augment fixture features.
+    """
+    logger.info(f"Training SuperiorPredictor on {len(df)} matches...")
 
     pipeline = FeaturePipeline()
     features = pipeline.build(df)
@@ -123,7 +107,7 @@ def train_production_model(df: pd.DataFrame):
     y_ou = ((df["FTHG"] + df["FTAG"]) > 2.5).astype(int).values
     y_btts = ((df["FTHG"] > 0) & (df["FTAG"] > 0)).astype(int).values
 
-    # Build match dicts for Poisson models
+    # Build match dicts for Poisson models + OpenSkill
     train_matches = [
         {
             "home_team_id": row["home_team_id"],
@@ -134,9 +118,9 @@ def train_production_model(df: pd.DataFrame):
         for _, row in df.iterrows()
     ]
 
-    # Dixon-Coles
-    dc_model = PoissonPredictor()
-    dc_model.fit(train_matches)
+    # We need a temporary DC model to augment features with attack/defence strengths
+    dc_temp = PoissonPredictor()
+    dc_temp.fit(train_matches)
 
     # Augment features with DC strengths
     n = len(df)
@@ -144,178 +128,77 @@ def train_production_model(df: pd.DataFrame):
     for k in range(n):
         h = df.iloc[k]["home_team_id"]
         a = df.iloc[k]["away_team_id"]
-        dc_feats[k, 0] = dc_model.attack_strength.get(h, np.nan)
-        dc_feats[k, 1] = dc_model.defence_strength.get(h, np.nan)
-        dc_feats[k, 2] = dc_model.attack_strength.get(a, np.nan)
-        dc_feats[k, 3] = dc_model.defence_strength.get(a, np.nan)
+        dc_feats[k, 0] = dc_temp.attack_strength.get(h, np.nan)
+        dc_feats[k, 1] = dc_temp.defence_strength.get(h, np.nan)
+        dc_feats[k, 2] = dc_temp.attack_strength.get(a, np.nan)
+        dc_feats[k, 3] = dc_temp.defence_strength.get(a, np.nan)
     X_aug = np.hstack([X, dc_feats])
 
-    # XGBoost
-    xgb = XGBoostPredictor()
-    xgb.fit(X_aug, y_1x2, y_ou=y_ou, y_btts=y_btts)
+    # Train SuperiorPredictor — fits XGB, CatBoost, LightGBM, DC, BVP, TabPFN, OpenSkill
+    predictor = SuperiorPredictor()
+    predictor.fit(
+        X_aug, y_1x2,
+        train_df=df,
+        train_matches=train_matches,
+        y_ou=y_ou,
+        y_btts=y_btts,
+    )
 
-    # CatBoost
-    cat = None
-    if HAS_CATBOOST:
-        cat = CatBoostPredictor()
-        cat.fit(X_aug, y_1x2, y_ou=y_ou, y_btts=y_btts)
+    logger.info(
+        "SuperiorPredictor ready: %d models, %d league draw rates, %d OpenSkill ratings",
+        len(predictor._models),
+        len(predictor._league_draw_rates),
+        len(predictor._team_ratings),
+    )
 
-    # LightGBM
-    lgbm = None
-    if HAS_LIGHTGBM:
-        lgbm = LightGBMPredictor()
-        lgbm.fit(X_aug, y_1x2, y_ou=y_ou, y_btts=y_btts)
+    return predictor, pipeline, dc_temp
 
-    # Bivariate Poisson
-    bvp = BivariatePoissonPredictor()
-    bvp.fit(train_matches)
 
-    logger.info("All models trained")
-
+def format_prediction(pred) -> dict:
+    """Convert SuperiorPrediction to serializable dict."""
     return {
-        "dc": dc_model, "xgb": xgb, "cat": cat, "lgbm": lgbm, "bvp": bvp,
-        "pipeline": pipeline, "X_template": X,
+        "home_team": pred.home_team,
+        "away_team": pred.away_team,
+        "league": pred.league,
+        "match_date": pred.match_date,
+        "probabilities": {
+            "Home": round(float(pred.probabilities[0]), 3),
+            "Draw": round(float(pred.probabilities[1]), 3),
+            "Away": round(float(pred.probabilities[2]), 3),
+        },
+        "predicted_outcome": pred.predicted_outcome,
+        "confidence": round(pred.confidence, 3),
+        "n_models": len(pred.model_probs),
+        "model_agreement": round(pred.model_agreement, 2),
+        "mc_uncertainty": round(pred.mc_std, 4),
+        "prediction_entropy": round(pred.prediction_entropy, 3),
+        "edge": round(pred.edge, 3),
+        "is_value_bet": pred.is_value_bet,
+        "expected_value": round(pred.expected_value, 1),
+        "kelly_stake_pct": round(pred.kelly_stake, 2),
+        "reasoning": pred.reasoning,
+        "confidence_factors": pred.confidence_factors,
+        "risk_factors": pred.risk_factors,
+        "model_breakdown": pred.model_probs,
+        "implied_probs": pred.implied_probs,
+        "goto_probs": pred.goto_probs,
     }
-
-
-def predict_match(models, home_team, away_team, features_vector, league=""):
-    """Generate prediction for a single upcoming match."""
-    dc = models["dc"]
-    xgb = models["xgb"]
-    cat = models["cat"]
-    lgbm = models["lgbm"]
-    bvp = models["bvp"]
-
-    # DC strengths for this match (use league average for unknown teams)
-    avg_attack = float(np.nanmean(list(dc.attack_strength.values()))) if dc.attack_strength else 0.0
-    avg_defence = float(np.nanmean(list(dc.defence_strength.values()))) if dc.defence_strength else 0.0
-
-    dc_feats = np.array([
-        dc.attack_strength.get(home_team, avg_attack),
-        dc.defence_strength.get(home_team, avg_defence),
-        dc.attack_strength.get(away_team, avg_attack),
-        dc.defence_strength.get(away_team, avg_defence),
-    ], dtype=np.float32)
-
-    X = np.hstack([features_vector, dc_feats]).reshape(1, -1)
-
-    # All model predictions — each must be (1, 3)
-    model_probs = {}
-    model_probs["xgb"] = xgb.predict_proba_1x2(X)  # already (1, 3)
-    if cat:
-        model_probs["catboost"] = cat.predict_proba_1x2(X)  # already (1, 3)
-    if lgbm:
-        model_probs["lgbm"] = lgbm.predict_proba_1x2(X)  # already (1, 3)
-    # Poisson models return (3,) — reshape to (1, 3)
-    model_probs["dc"] = dc.predict_proba_1x2(home_team, away_team).reshape(1, 3)
-    model_probs["bvp"] = bvp.predict_proba_1x2(home_team, away_team).reshape(1, 3)
-
-    # MC simulation
-    mc_probs, mc_conf, mc_std = monte_carlo_simulate(model_probs, n_sims=5000)
-
-    # Consensus
-    consensus_pred, consensus_count = compute_consensus(model_probs)
-
-    # Weighted blend (V2 best weights)
-    weights = {"xgb": 0.30, "catboost": 0.20, "lgbm": 0.20, "dc": 0.20, "bvp": 0.10}
-    blended = np.zeros(3)
-    total_w = 0
-    for name, probs in model_probs.items():
-        w = weights.get(name, 0.1)
-        blended += w * probs[0]
-        total_w += w
-    blended /= total_w
-
-    # Combine with MC (70/30)
-    final = 0.7 * blended + 0.3 * mc_probs[0]
-    final = final / final.sum()
-
-    # Draw floor
-    if final[1] < 0.18:
-        deficit = 0.18 - final[1]
-        final[1] = 0.18
-        ha = final[0] + final[2]
-        if ha > 0:
-            final[0] -= deficit * (final[0] / ha)
-            final[2] -= deficit * (final[2] / ha)
-        final = np.clip(final, 0.01, None)
-        final /= final.sum()
-
-    pred_idx = int(np.argmax(final))
-    outcomes = ["Home", "Draw", "Away"]
-
-    return {
-        "home_team": home_team,
-        "away_team": away_team,
-        "league": league,
-        "probabilities": {"Home": round(float(final[0]), 3), "Draw": round(float(final[1]), 3), "Away": round(float(final[2]), 3)},
-        "predicted_outcome": outcomes[pred_idx],
-        "confidence": round(float(final[pred_idx]), 3),
-        "consensus": int(consensus_count[0]),
-        "n_models": len(model_probs),
-        "mc_confidence": round(float(mc_conf[0]), 3),
-        "mc_uncertainty": round(float(mc_std[0, pred_idx]), 4),
-        "model_breakdown": {name: [round(float(p), 3) for p in probs[0]] for name, probs in model_probs.items()},
-    }
-
-
-def find_value_bets(predictions: list[dict], odds: dict, min_edge: float = 0.05) -> list[dict]:
-    """Find bets where model probability exceeds implied probability by min_edge."""
-    picks = []
-
-    for pred in predictions:
-        key = (pred["home_team"], pred["away_team"])
-        match_odds = odds.get(key, {})
-
-        if not match_odds:
-            continue
-
-        # Check each outcome for value
-        for outcome, prob in pred["probabilities"].items():
-            odds_key = outcome.lower()
-            bet_odds = match_odds.get(odds_key, 0)
-
-            if bet_odds <= 1.0:
-                continue
-
-            implied = 1.0 / bet_odds
-            edge = prob - implied
-
-            if edge >= min_edge and prob >= 0.50:
-                # Kelly stake
-                b = bet_odds - 1
-                kelly = (prob * b - (1 - prob)) / b
-                kelly_stake = max(0, kelly * 0.25)  # quarter Kelly
-
-                picks.append({
-                    **pred,
-                    "market": f"1x2_{outcome.lower()}",
-                    "selection": outcome,
-                    "bet_odds": bet_odds,
-                    "implied_prob": round(implied, 3),
-                    "edge": round(edge, 3),
-                    "edge_pct": round(edge * 100, 1),
-                    "kelly_stake_pct": round(kelly_stake * 100, 2),
-                    "bookmaker": match_odds.get("bookmaker", "unknown"),
-                    "expected_value": round((prob * bet_odds - 1) * 100, 1),
-                })
-
-    # Sort by edge descending
-    picks.sort(key=lambda x: x["edge"], reverse=True)
-    return picks
 
 
 def format_pick_message(pick: dict) -> str:
-    """Format a pick for Telegram."""
-    return (
+    """Format a pick for display."""
+    msg = (
         f"  {pick['home_team']} vs {pick['away_team']}\n"
         f"  {pick['league']}\n"
-        f"  {pick['selection']} @ {pick['bet_odds']}\n"
-        f"  Model: {pick['confidence']:.1%} | Implied: {pick['implied_prob']:.1%}\n"
-        f"  Edge: {pick['edge_pct']}% | EV: {pick['expected_value']}%\n"
-        f"  Stake: {pick['kelly_stake_pct']}% of bankroll\n"
-        f"  Consensus: {pick['consensus']}/{pick['n_models']} models agree\n"
+        f"  {pick['predicted_outcome']} @ {pick['confidence']:.1%}\n"
+        f"  Edge: {pick['edge']:.1%} | EV: {pick['expected_value']}%\n"
+        f"  Stake: {pick['kelly_stake_pct']}% | {pick['n_models']} models, {pick['model_agreement']:.0%} agree\n"
     )
+    if pick.get("confidence_factors"):
+        msg += f"  + {', '.join(pick['confidence_factors'])}\n"
+    if pick.get("risk_factors"):
+        msg += f"  ! {', '.join(pick['risk_factors'])}\n"
+    return msg
 
 
 def main():
@@ -326,7 +209,7 @@ def main():
     args = parser.parse_args()
 
     logger.info("=" * 60)
-    logger.info("  SharpEdge Live Prediction Pipeline")
+    logger.info("  SharpEdge Live Prediction Pipeline (SuperiorPredictor)")
     logger.info("=" * 60)
 
     # 1. Load ALL historical data
@@ -334,8 +217,8 @@ def main():
     df = load_historical_matches()
     logger.info(f"Loaded {len(df)} matches")
 
-    # 2. Train production model
-    models = train_production_model(df)
+    # 2. Train SuperiorPredictor (all models + OpenSkill + adaptive draw floors)
+    predictor, pipeline, dc_temp = train_superior_predictor(df)
 
     # 3. Fetch upcoming fixtures
     logger.info(f"Fetching fixtures for next {args.days} days...")
@@ -346,65 +229,87 @@ def main():
         return
 
     # 4. Fetch current odds
-    odds = fetch_current_odds(fixtures)
+    odds_dict = fetch_current_odds(fixtures)
 
     # 5. Build features for upcoming matches
     logger.info("Building features for upcoming matches...")
-    pipeline = models["pipeline"]
 
-    # Upcoming matches need placeholder goal columns for the feature pipeline
-    # (rolling features look back at historical data only)
     for col in ["FTHG", "FTAG", "FTR", "HTHG", "HTAG", "HTR"]:
         if col not in fixtures.columns:
-            if col == "FTR":
-                fixtures[col] = "D"
-            elif col == "HTR":
+            if col in ("FTR", "HTR"):
                 fixtures[col] = "D"
             else:
                 fixtures[col] = 0
 
-    # Add season column if missing (needed by some feature groups)
     if "season" not in fixtures.columns:
         fixtures["season"] = "2024-25"
 
-    # Combine historical + upcoming for feature context
     combined = pd.concat([df, fixtures], ignore_index=True)
     combined_features = pipeline.build(combined)
     upcoming_features = combined_features.iloc[len(df):].reset_index(drop=True)
 
-    # 6. Generate predictions
+    # DC strength averages for unknown teams
+    avg_attack = float(np.nanmean(list(dc_temp.attack_strength.values()))) if dc_temp.attack_strength else 0.0
+    avg_defence = float(np.nanmean(list(dc_temp.defence_strength.values()))) if dc_temp.defence_strength else 0.0
+
+    # 6. Generate predictions using SuperiorPredictor
     logger.info("Generating predictions...")
     predictions = []
     for i, (_, fixture) in enumerate(fixtures.iterrows()):
         try:
             feat_vec = upcoming_features.iloc[i].values.astype(np.float32)
-            pred = predict_match(
-                models,
-                fixture.get("home_team_id", fixture.get("home_team", "")),
-                fixture.get("away_team_id", fixture.get("away_team", "")),
-                feat_vec,
-                league=fixture.get("league", ""),
+            home_team = fixture.get("home_team_id", fixture.get("home_team", ""))
+            away_team = fixture.get("away_team_id", fixture.get("away_team", ""))
+            league = fixture.get("league", "")
+
+            # Augment feature vector with DC strengths
+            dc_feats = np.array([
+                dc_temp.attack_strength.get(home_team, avg_attack),
+                dc_temp.defence_strength.get(home_team, avg_defence),
+                dc_temp.attack_strength.get(away_team, avg_attack),
+                dc_temp.defence_strength.get(away_team, avg_defence),
+            ], dtype=np.float32)
+            feat_aug = np.hstack([feat_vec, dc_feats])
+
+            # Look up odds for this match
+            match_odds = odds_dict.get((home_team, away_team))
+
+            pred = predictor.predict(
+                X=feat_aug,
+                home_team=home_team,
+                away_team=away_team,
+                league=league,
+                odds=match_odds,
+                match_date=str(fixture.get("match_date", "")),
             )
-            pred["match_date"] = str(fixture.get("match_date", ""))
-            predictions.append(pred)
+
+            predictions.append(format_prediction(pred))
         except Exception as e:
-            logger.warning(f"Failed to predict {fixture.get('home_team', '?')} vs {fixture.get('away_team', '?')}: {e}")
+            logger.warning(
+                f"Failed to predict {fixture.get('home_team', '?')} vs "
+                f"{fixture.get('away_team', '?')}: {e}"
+            )
 
     logger.info(f"Generated {len(predictions)} predictions")
 
-    # 7. Find value bets
-    picks = find_value_bets(predictions, odds, min_edge=args.min_edge)
-    logger.info(f"Found {len(picks)} value bets (edge >= {args.min_edge:.0%})")
+    # 7. Identify value bets (already computed by SuperiorPredictor)
+    value_picks = [p for p in predictions if p["is_value_bet"]]
+    value_picks.sort(key=lambda x: x["edge"], reverse=True)
+    logger.info(f"Found {len(value_picks)} value bets")
 
     # 8. Output
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "pipeline": "SuperiorPredictor",
         "total_fixtures": len(fixtures),
         "total_predictions": len(predictions),
-        "total_picks": len(picks),
+        "total_value_bets": len(value_picks),
         "min_edge": args.min_edge,
+        "models_used": list(predictor._models.keys()),
+        "league_draw_rates": {k: round(v, 3) for k, v in predictor._league_draw_rates.items()},
+        "openskill_teams": len(predictor._team_ratings),
         "predictions": predictions,
-        "picks": picks,
+        "value_picks": value_picks,
     }
 
     output_path = ROOT / args.output
@@ -412,12 +317,12 @@ def main():
         json.dump(output, f, indent=2, default=str)
     logger.info(f"Results saved to {output_path}")
 
-    # 9. Print picks
-    if picks:
+    # 9. Print value bets
+    if value_picks:
         logger.info("\n" + "=" * 60)
         logger.info("  VALUE BETS FOUND")
         logger.info("=" * 60)
-        for pick in picks[:10]:  # top 10
+        for pick in value_picks[:10]:
             logger.info(f"\n{format_pick_message(pick)}")
     else:
         logger.info("No value bets found at current odds.")
@@ -426,13 +331,22 @@ def main():
     logger.info("\n" + "=" * 60)
     logger.info("  ALL PREDICTIONS")
     logger.info("=" * 60)
+
+    # Verify draw probabilities are NOT all the same
+    draw_probs = [p["probabilities"]["Draw"] for p in predictions]
+    unique_draws = len(set(draw_probs))
+    logger.info(f"Draw probability diversity: {unique_draws} unique values across {len(predictions)} predictions")
+    if unique_draws <= 3 and len(predictions) > 10:
+        logger.warning("LOW DRAW DIVERSITY — adaptive floor may not be working!")
+
     for pred in predictions[:20]:
         probs = pred["probabilities"]
         logger.info(
             f"{pred['match_date'][:10]} | {pred['league']:20s} | "
             f"{pred['home_team']:20s} vs {pred['away_team']:20s} | "
             f"H={probs['Home']:.0%} D={probs['Draw']:.0%} A={probs['Away']:.0%} | "
-            f"{pred['predicted_outcome']} ({pred['confidence']:.0%})"
+            f"{pred['predicted_outcome']} ({pred['confidence']:.0%}) | "
+            f"{pred['n_models']} models"
         )
 
 
