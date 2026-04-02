@@ -440,3 +440,95 @@ class AgentPerformance(Base):
     brier_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     agent: Mapped["Agent"] = relationship("Agent", back_populates="performance_snapshots")
+
+
+# ---------------------------------------------------------------------------
+# Closed-loop learning & edge discovery tables
+# ---------------------------------------------------------------------------
+
+
+class EdgeLog(Base):
+    """Tracks every edge discovered: where, when, how much, and whether it persisted."""
+
+    __tablename__ = "edge_log"
+    __table_args__ = (
+        Index("ix_edge_log_date", "discovered_date"),
+        Index("ix_edge_log_agent", "agent_name"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    agent_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    sport_slug: Mapped[str] = mapped_column(String(50), nullable=False)
+    league: Mapped[str] = mapped_column(String(200), nullable=False)
+    market: Mapped[str] = mapped_column(String(50), nullable=False)
+    edge_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "clv", "accuracy", "roi"
+    edge_value: Mapped[float] = mapped_column(Float, nullable=False)
+    sample_size: Mapped[int] = mapped_column(Integer, nullable=False)
+    confidence_interval_lo: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    confidence_interval_hi: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    is_significant: Mapped[bool] = mapped_column(Boolean, default=False)
+    discovered_date: Mapped[date] = mapped_column(Date, nullable=False)
+    expired_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    metadata_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+
+
+class DriftSnapshot(Base):
+    """Model calibration drift tracking — detects when models go stale."""
+
+    __tablename__ = "drift_snapshots"
+    __table_args__ = (Index("ix_drift_date", "snapshot_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sport_slug: Mapped[str] = mapped_column(String(50), nullable=False)
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    window_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    calibration_error: Mapped[float] = mapped_column(Float, nullable=False)
+    brier_score: Mapped[float] = mapped_column(Float, nullable=False)
+    log_loss: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    n_predictions: Mapped[int] = mapped_column(Integer, nullable=False)
+    accuracy: Mapped[float] = mapped_column(Float, nullable=False)
+    roi_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    clv_mean: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    drift_detected: Mapped[bool] = mapped_column(Boolean, default=False)
+    drift_severity: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    retrain_triggered: Mapped[bool] = mapped_column(Boolean, default=False)
+    details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+
+
+class AgentEvolution(Base):
+    """Tracks agent mutations, spawning, and natural selection events."""
+
+    __tablename__ = "agent_evolution"
+    __table_args__ = (Index("ix_agent_evo_date", "event_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    agent_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(50), nullable=False)  # "spawned", "mutated", "promoted", "deprecated"
+    parent_agent: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    event_date: Mapped[date] = mapped_column(Date, nullable=False)
+    config_before: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    config_after: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    performance_at_event: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+
+
+class BankrollLedger(Base):
+    """Immutable bankroll audit trail — every stake in, every payout out."""
+
+    __tablename__ = "bankroll_ledger"
+    __table_args__ = (Index("ix_bankroll_date", "event_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    event_date: Mapped[date] = mapped_column(Date, nullable=False)
+    event_type: Mapped[str] = mapped_column(String(30), nullable=False)  # "stake", "payout", "deposit", "withdrawal"
+    pick_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("daily_picks.id"), nullable=True)
+    amount: Mapped[float] = mapped_column(Float, nullable=False)
+    bankroll_before: Mapped[float] = mapped_column(Float, nullable=False)
+    bankroll_after: Mapped[float] = mapped_column(Float, nullable=False)
+    drawdown_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    circuit_breaker_level: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())

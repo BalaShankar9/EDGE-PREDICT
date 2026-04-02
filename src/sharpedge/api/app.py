@@ -1,6 +1,18 @@
 """FastAPI application factory."""
 from fastapi import FastAPI
-from sharpedge.api.routers import health, leagues, matches, pipeline, predictions, picks, track_record, sports, agents
+from sharpedge.api.routers import (
+    health,
+    leagues,
+    matches,
+    pipeline,
+    predictions,
+    picks,
+    track_record,
+    sports,
+    agents,
+    intelligence,
+    evolution,
+)
 
 
 def create_app() -> FastAPI:
@@ -12,7 +24,7 @@ def create_app() -> FastAPI:
     import sharpedge.sports.american_football  # noqa: F401
     import sharpedge.sports.baseball  # noqa: F401
 
-    app = FastAPI(title="SharpEdge AI", description="AI-powered multi-sport prediction API", version="0.4.0")
+    app = FastAPI(title="SharpEdge AI", description="AI-powered multi-sport prediction API", version="0.5.0")
     app.include_router(health.router, prefix="/api")
     app.include_router(pipeline.router, prefix="/api")
     app.include_router(predictions.router, prefix="/api")
@@ -22,4 +34,6 @@ def create_app() -> FastAPI:
     app.include_router(matches.router, prefix="/api")
     app.include_router(sports.router, prefix="/api")
     app.include_router(agents.router, prefix="/api")
+    app.include_router(intelligence.router, prefix="/api")
+    app.include_router(evolution.router, prefix="/api")
     return app

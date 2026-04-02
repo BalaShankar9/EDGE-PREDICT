@@ -8,6 +8,8 @@ from sharpedge.intelligence.travel_fatigue import TravelFatigueModeler
 from sharpedge.intelligence.motivation_context import MotivationScorer
 from sharpedge.intelligence.injury_impact import InjuryImpactModeler
 
+from sharpedge.intelligence.edge_discovery import EdgeDiscoveryEngine
+
 __all__ = [
     "LineMovementTracker", "LineSnapshot", "LineMovement",
     "PublicBettingTracker", "PublicBettingData",
@@ -16,4 +18,5 @@ __all__ = [
     "TravelFatigueModeler",
     "MotivationScorer",
     "InjuryImpactModeler",
+    "EdgeDiscoveryEngine",
 ]
