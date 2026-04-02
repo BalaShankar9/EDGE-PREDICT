@@ -14,7 +14,6 @@ import logging
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from sharpedge.db.engine import get_session
@@ -26,6 +25,7 @@ from sharpedge.db.models import (
     MatchOdds,
     MatchStats,
     MatchXG,
+    RawStagingRecord,
     Season,
     Team,
 )
@@ -114,6 +114,22 @@ def _safe_float(val):
         return float(val)
     except (ValueError, TypeError):
         return None
+
+
+def _row_to_dict(row: pd.Series) -> dict:
+    """Convert a DataFrame row to a plain JSON-serialisable dict."""
+    result = {}
+    for k, v in row.items():
+        if pd.isna(v) if not isinstance(v, (list, dict)) else False:
+            result[k] = None
+        elif isinstance(v, pd.Timestamp):
+            result[k] = v.isoformat()
+        elif hasattr(v, "item"):
+            # numpy scalar → python native
+            result[k] = v.item()
+        else:
+            result[k] = v
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -521,6 +537,546 @@ def ingest_predictions(
 
 
 # ---------------------------------------------------------------------------
+# BetExplorer: odds → MatchOdds
+# ---------------------------------------------------------------------------
+
+def ingest_betexplorer_odds(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest BetExplorer odds data → MatchOdds table.
+
+    Expected columns: home_team, away_team, date (or match_date),
+    odds_home, odds_draw, odds_away.  Optional: market, odds_type.
+    """
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    team_cache: dict = {}
+    inserted = 0
+
+    try:
+        for _, row in df.iterrows():
+            home_name = str(row.get("home_team", "")).strip()
+            away_name = str(row.get("away_team", "")).strip()
+            if not home_name or not away_name:
+                continue
+
+            date_val = row.get("match_date", row.get("date", ""))
+            try:
+                match_date = _parse_date(date_val)
+            except (ValueError, KeyError):
+                continue
+
+            home_team_id = _get_or_create_team(session, home_name, team_cache)
+            away_team_id = _get_or_create_team(session, away_name, team_cache)
+
+            match = (
+                session.query(Match)
+                .filter(
+                    Match.match_date == match_date,
+                    Match.home_team_id == home_team_id,
+                    Match.away_team_id == away_team_id,
+                )
+                .first()
+            )
+            if not match:
+                continue
+
+            market = str(row.get("market", "1X2")).strip() or "1X2"
+            odds_type = str(row.get("odds_type", "pre-match")).strip() or "pre-match"
+
+            existing = (
+                session.query(MatchOdds)
+                .filter(
+                    MatchOdds.match_id == match.id,
+                    MatchOdds.bookmaker == "BetExplorer",
+                    MatchOdds.market == market,
+                    MatchOdds.odds_type == odds_type,
+                )
+                .first()
+            )
+            if not existing:
+                session.add(
+                    MatchOdds(
+                        match_id=match.id,
+                        bookmaker="BetExplorer",
+                        market=market,
+                        odds_type=odds_type,
+                        odds_home=_safe_float(row.get("odds_home")),
+                        odds_draw=_safe_float(row.get("odds_draw")),
+                        odds_away=_safe_float(row.get("odds_away")),
+                    )
+                )
+                inserted += 1
+
+        session.commit()
+        logger.info(f"[betexplorer] Ingested {inserted} new odds records")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return inserted
+
+
+# ---------------------------------------------------------------------------
+# OddsPortal: closing odds → MatchOdds
+# ---------------------------------------------------------------------------
+
+def ingest_oddsportal_odds(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest OddsPortal closing odds data → MatchOdds table.
+
+    Expected columns: home_team, away_team, date (or match_date),
+    odds_home, odds_draw, odds_away.  Optional: market, odds_type.
+    """
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    team_cache: dict = {}
+    inserted = 0
+
+    try:
+        for _, row in df.iterrows():
+            home_name = str(row.get("home_team", "")).strip()
+            away_name = str(row.get("away_team", "")).strip()
+            if not home_name or not away_name:
+                continue
+
+            date_val = row.get("match_date", row.get("date", ""))
+            try:
+                match_date = _parse_date(date_val)
+            except (ValueError, KeyError):
+                continue
+
+            home_team_id = _get_or_create_team(session, home_name, team_cache)
+            away_team_id = _get_or_create_team(session, away_name, team_cache)
+
+            match = (
+                session.query(Match)
+                .filter(
+                    Match.match_date == match_date,
+                    Match.home_team_id == home_team_id,
+                    Match.away_team_id == away_team_id,
+                )
+                .first()
+            )
+            if not match:
+                continue
+
+            market = str(row.get("market", "1X2")).strip() or "1X2"
+            # OddsPortal typically provides closing odds
+            odds_type = str(row.get("odds_type", "closing")).strip() or "closing"
+
+            existing = (
+                session.query(MatchOdds)
+                .filter(
+                    MatchOdds.match_id == match.id,
+                    MatchOdds.bookmaker == "OddsPortal",
+                    MatchOdds.market == market,
+                    MatchOdds.odds_type == odds_type,
+                )
+                .first()
+            )
+            if not existing:
+                session.add(
+                    MatchOdds(
+                        match_id=match.id,
+                        bookmaker="OddsPortal",
+                        market=market,
+                        odds_type=odds_type,
+                        odds_home=_safe_float(row.get("odds_home")),
+                        odds_draw=_safe_float(row.get("odds_draw")),
+                        odds_away=_safe_float(row.get("odds_away")),
+                    )
+                )
+                inserted += 1
+
+        session.commit()
+        logger.info(f"[oddsportal] Ingested {inserted} new odds records")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return inserted
+
+
+# ---------------------------------------------------------------------------
+# Betfair Exchange: exchange data → MatchOdds
+# ---------------------------------------------------------------------------
+
+def ingest_betfair_exchange(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest Betfair exchange data → MatchOdds with bookmaker='BetfairExchange'.
+
+    Expected columns: home_team, away_team, date (or match_date),
+    odds_home, odds_draw, odds_away.  Optional: market, odds_type, volume.
+    """
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    team_cache: dict = {}
+    inserted = 0
+
+    try:
+        for _, row in df.iterrows():
+            home_name = str(row.get("home_team", "")).strip()
+            away_name = str(row.get("away_team", "")).strip()
+            if not home_name or not away_name:
+                continue
+
+            date_val = row.get("match_date", row.get("date", ""))
+            try:
+                match_date = _parse_date(date_val)
+            except (ValueError, KeyError):
+                continue
+
+            home_team_id = _get_or_create_team(session, home_name, team_cache)
+            away_team_id = _get_or_create_team(session, away_name, team_cache)
+
+            match = (
+                session.query(Match)
+                .filter(
+                    Match.match_date == match_date,
+                    Match.home_team_id == home_team_id,
+                    Match.away_team_id == away_team_id,
+                )
+                .first()
+            )
+            if not match:
+                continue
+
+            market = str(row.get("market", "1X2")).strip() or "1X2"
+            odds_type = str(row.get("odds_type", "exchange")).strip() or "exchange"
+
+            existing = (
+                session.query(MatchOdds)
+                .filter(
+                    MatchOdds.match_id == match.id,
+                    MatchOdds.bookmaker == "BetfairExchange",
+                    MatchOdds.market == market,
+                    MatchOdds.odds_type == odds_type,
+                )
+                .first()
+            )
+            if not existing:
+                session.add(
+                    MatchOdds(
+                        match_id=match.id,
+                        bookmaker="BetfairExchange",
+                        market=market,
+                        odds_type=odds_type,
+                        odds_home=_safe_float(row.get("odds_home")),
+                        odds_draw=_safe_float(row.get("odds_draw")),
+                        odds_away=_safe_float(row.get("odds_away")),
+                    )
+                )
+                inserted += 1
+
+        session.commit()
+        logger.info(f"[betfair_exchange] Ingested {inserted} new exchange odds records")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return inserted
+
+
+# ---------------------------------------------------------------------------
+# Sofascore: fixtures → Match table (scheduled matches)
+# ---------------------------------------------------------------------------
+
+def ingest_sofascore(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest Sofascore fixture data → Match table (creates scheduled matches).
+
+    Expected columns: home_team, away_team, date (or match_date).
+    Optional: kickoff_time, competition, season, status.
+    """
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    team_cache: dict = {}
+    league_cache: dict = {}
+    season_cache: dict = {}
+    inserted = 0
+
+    try:
+        for _, row in df.iterrows():
+            home_name = str(row.get("home_team", "")).strip()
+            away_name = str(row.get("away_team", "")).strip()
+            if not home_name or not away_name or home_name == "nan":
+                continue
+
+            date_val = row.get("match_date", row.get("date", ""))
+            try:
+                match_date = _parse_date(date_val)
+            except (ValueError, KeyError):
+                continue
+
+            home_team_id = _get_or_create_team(session, home_name, team_cache)
+            away_team_id = _get_or_create_team(session, away_name, team_cache)
+
+            league_name = str(row.get("competition", row.get("league", "Unknown"))).strip()
+            season_label = str(row.get("season", "Unknown")).strip()
+            league_id = _get_or_create_league(session, league_name, league_cache)
+            season_id = _get_or_create_season(
+                session, league_id, season_label, season_cache
+            )
+
+            existing = (
+                session.query(Match)
+                .filter(
+                    Match.match_date == match_date,
+                    Match.home_team_id == home_team_id,
+                    Match.away_team_id == away_team_id,
+                )
+                .first()
+            )
+            if not existing:
+                match_status = str(row.get("status", "scheduled")).strip() or "scheduled"
+                session.add(
+                    Match(
+                        season_id=season_id,
+                        match_date=match_date,
+                        home_team_id=home_team_id,
+                        away_team_id=away_team_id,
+                        status=match_status,
+                    )
+                )
+                inserted += 1
+
+        session.commit()
+        logger.info(f"[sofascore] Ingested {inserted} new scheduled matches")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return inserted
+
+
+# ---------------------------------------------------------------------------
+# FlashScore: results → update Match scores
+# ---------------------------------------------------------------------------
+
+def ingest_flashscore_results(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest FlashScore result data → updates Match scores in place.
+
+    Expected columns: home_team, away_team, date (or match_date),
+    home_goals (or home_score), away_goals (or away_score).
+    Optional: result (H/D/A).
+
+    Only updates existing Match rows — does not create new matches.
+    """
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    team_cache: dict = {}
+    updated = 0
+
+    try:
+        for _, row in df.iterrows():
+            home_name = str(row.get("home_team", "")).strip()
+            away_name = str(row.get("away_team", "")).strip()
+            if not home_name or not away_name:
+                continue
+
+            date_val = row.get("match_date", row.get("date", ""))
+            try:
+                match_date = _parse_date(date_val)
+            except (ValueError, KeyError):
+                continue
+
+            home_team_id = _get_or_create_team(session, home_name, team_cache)
+            away_team_id = _get_or_create_team(session, away_name, team_cache)
+
+            match = (
+                session.query(Match)
+                .filter(
+                    Match.match_date == match_date,
+                    Match.home_team_id == home_team_id,
+                    Match.away_team_id == away_team_id,
+                )
+                .first()
+            )
+            if not match:
+                continue
+
+            home_goals = _safe_int(row.get("home_goals", row.get("home_score")))
+            away_goals = _safe_int(row.get("away_goals", row.get("away_score")))
+
+            if home_goals is not None:
+                match.home_goals = home_goals
+            if away_goals is not None:
+                match.away_goals = away_goals
+
+            # Derive result from score if not provided
+            raw_result = str(row.get("result", "")).strip()
+            if raw_result in _RESULT_MAP:
+                match.result = _RESULT_MAP[raw_result]
+            elif home_goals is not None and away_goals is not None:
+                if home_goals > away_goals:
+                    match.result = "H"
+                elif home_goals < away_goals:
+                    match.result = "A"
+                else:
+                    match.result = "D"
+
+            match.status = "played"
+            updated += 1
+
+        session.commit()
+        logger.info(f"[flashscore] Updated scores for {updated} matches")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# Raw staging: generic helper
+# ---------------------------------------------------------------------------
+
+def _ingest_raw_staging(
+    df: pd.DataFrame,
+    source_name: str,
+    record_type: str,
+    session: Session | None = None,
+) -> int:
+    """Generic ingest into raw_staging_records for sources without dedicated tables."""
+    if df.empty:
+        return 0
+
+    own_session = session is None
+    if own_session:
+        session = get_session()
+
+    inserted = 0
+    now = datetime.now()
+
+    try:
+        for _, row in df.iterrows():
+            session.add(
+                RawStagingRecord(
+                    source=source_name,
+                    record_type=record_type,
+                    raw_data=_row_to_dict(row),
+                    status="ingested",
+                    created_at=now,
+                )
+            )
+            inserted += 1
+
+        session.commit()
+        logger.info(
+            f"[{source_name}] Staged {inserted} raw {record_type} records"
+        )
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        if own_session:
+            session.close()
+
+    return inserted
+
+
+# ---------------------------------------------------------------------------
+# Transfermarkt: injury/absence data → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_transfermarkt_injuries(
+    df: pd.DataFrame, session: Session | None = None
+) -> int:
+    """Ingest Transfermarkt injury data → raw_staging_records[record_type='injury']."""
+    return _ingest_raw_staging(df, "transfermarkt", "injury", session)
+
+
+# ---------------------------------------------------------------------------
+# Lineups → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_lineups(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest lineup data → raw_staging_records[record_type='lineup']."""
+    return _ingest_raw_staging(df, "lineup_scraper", "lineup", session)
+
+
+# ---------------------------------------------------------------------------
+# Team news → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_team_news(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest team news data → raw_staging_records[record_type='team_news']."""
+    return _ingest_raw_staging(df, "team_news", "team_news", session)
+
+
+# ---------------------------------------------------------------------------
+# Referee stats → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_referee_stats(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest referee stats → raw_staging_records[record_type='referee_stats']."""
+    return _ingest_raw_staging(df, "referee_stats", "referee_stats", session)
+
+
+# ---------------------------------------------------------------------------
+# Manager records → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_manager_records(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest manager records → raw_staging_records[record_type='manager_records']."""
+    return _ingest_raw_staging(df, "manager_records", "manager_records", session)
+
+
+# ---------------------------------------------------------------------------
+# Wages (Capology) → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_wages(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest Capology wages data → raw_staging_records[record_type='wages']."""
+    return _ingest_raw_staging(df, "capology", "wages", session)
+
+
+# ---------------------------------------------------------------------------
+# Advanced metrics (WhoScored / AdvancedMetrics) → raw_staging_records
+# ---------------------------------------------------------------------------
+
+def ingest_advanced_metrics(df: pd.DataFrame, session: Session | None = None) -> int:
+    """Ingest advanced metrics → raw_staging_records[record_type='advanced_metrics']."""
+    return _ingest_raw_staging(df, "advanced_metrics", "advanced_metrics", session)
+
+
+# ---------------------------------------------------------------------------
 # Dispatch: route DataFrame to the right ingest function
 # ---------------------------------------------------------------------------
 
@@ -530,9 +1086,27 @@ _PREDICTION_SOURCES = {"forebet", "predictz", "windrawwin", "footystats"}
 def ingest_dataframe(df: pd.DataFrame, source_name: str) -> int:
     """Route a collector's DataFrame to the appropriate ingest function.
 
-    Returns the number of new rows inserted.
+    Returns the number of new rows inserted (or updated for score patching).
+
+    Supported sources
+    -----------------
+    football_data_uk, club_elo, understat,
+    forebet, predictz, windrawwin, footystats   (→ competitor_predictions)
+    betexplorer                                  (→ match_odds)
+    oddsportal                                   (→ match_odds)
+    betfair_exchange                             (→ match_odds)
+    sofascore                                    (→ matches as scheduled)
+    flashscore                                   (→ updates match scores)
+    transfermarkt                                (→ raw_staging: injury)
+    lineup_scraper, fotmob                       (→ raw_staging: lineup)
+    team_news                                    (→ raw_staging: team_news)
+    referee_stats                                (→ raw_staging: referee_stats)
+    manager_records                              (→ raw_staging: manager_records)
+    capology                                     (→ raw_staging: wages)
+    advanced_metrics, whoscored                  (→ raw_staging: advanced_metrics)
+    crowd_sentiment, european_fatigue            (→ raw_staging: <source_name>)
     """
-    if df.empty:
+    if df is None or df.empty:
         return 0
 
     if source_name == "football_data_uk":
@@ -543,7 +1117,36 @@ def ingest_dataframe(df: pd.DataFrame, source_name: str) -> int:
         return ingest_understat(df)
     elif source_name in _PREDICTION_SOURCES:
         return ingest_predictions(df, source_name)
-    elif source_name in ("fbref", "football_data_org", "open_meteo"):
+    elif source_name == "betexplorer":
+        return ingest_betexplorer_odds(df)
+    elif source_name == "oddsportal":
+        return ingest_oddsportal_odds(df)
+    elif source_name == "betfair_exchange":
+        return ingest_betfair_exchange(df)
+    elif source_name == "sofascore":
+        return ingest_sofascore(df)
+    elif source_name == "flashscore":
+        return ingest_flashscore_results(df)
+    elif source_name == "transfermarkt":
+        return ingest_transfermarkt_injuries(df)
+    elif source_name in ("lineup_scraper", "fotmob"):
+        return ingest_lineups(df)
+    elif source_name == "team_news":
+        return ingest_team_news(df)
+    elif source_name == "referee_stats":
+        return ingest_referee_stats(df)
+    elif source_name == "manager_records":
+        return ingest_manager_records(df)
+    elif source_name == "capology":
+        return ingest_wages(df)
+    elif source_name in ("advanced_metrics", "whoscored"):
+        return ingest_advanced_metrics(df)
+    elif source_name in ("crowd_sentiment", "european_fatigue"):
+        # Stage raw for downstream processing
+        return _ingest_raw_staging(df, source_name, source_name)
+    elif source_name in ("fbref", "football_data_org", "open_meteo",
+                         "world_football", "prediction_aggregator",
+                         "soccerway"):
         # These sources need more complex mapping or aren't critical for training
         logger.debug(f"[{source_name}] Ingestion not yet implemented, skipping")
         return 0

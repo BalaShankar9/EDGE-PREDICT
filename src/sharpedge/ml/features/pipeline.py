@@ -1,6 +1,6 @@
 """Feature assembly pipeline.
 
-Orchestrates all FeatureGroups to produce the full 46-feature matrix
+Orchestrates all FeatureGroups to produce the full 78-feature matrix
 from raw match data + supplementary DataFrames.
 
 Note: XGPerformanceFeatures, MetaPredictionFeatures, GoalPatternFeatures, and
@@ -16,16 +16,30 @@ from sharpedge.ml.features.h2h import H2HFeatures
 from sharpedge.ml.features.market import MarketFeatures
 from sharpedge.ml.features.context import ContextFeatures
 from sharpedge.ml.features.shots import ShotFeatures
+from sharpedge.ml.features.elite import (
+    RefereeFeatures,
+    ManagerFeatures,
+    WageFeatures,
+    FatigueFeatures,
+    LineupFeatures,
+    AdvancedStatsFeatures,
+)
 
 logger = logging.getLogger(__name__)
 
 ALL_GROUPS = [
-    FormFeatures,       # 12 features
-    EloFeatures,        # 6 features
-    H2HFeatures,        # 6 features
-    MarketFeatures,     # 8 features
-    ContextFeatures,    # 6 features
-    ShotFeatures,       # 8 features
+    FormFeatures,           # 12 features
+    EloFeatures,            # 6 features
+    H2HFeatures,            # 6 features
+    MarketFeatures,         # 8 features
+    ContextFeatures,        # 6 features
+    ShotFeatures,           # 8 features
+    RefereeFeatures,        # 6 features
+    ManagerFeatures,        # 5 features
+    WageFeatures,           # 4 features
+    FatigueFeatures,        # 5 features
+    LineupFeatures,         # 4 features
+    AdvancedStatsFeatures,  # 8 features
 ]
 
 
@@ -41,6 +55,13 @@ class FeaturePipeline:
         elo_df: pd.DataFrame | None = None,
         xg_df: pd.DataFrame | None = None,
         predictions_df: pd.DataFrame | None = None,
+        referee_df: pd.DataFrame | None = None,
+        manager_df: pd.DataFrame | None = None,
+        wage_df: pd.DataFrame | None = None,
+        fatigue_df: pd.DataFrame | None = None,
+        lineup_df: pd.DataFrame | None = None,
+        advanced_df: pd.DataFrame | None = None,
+        injuries_df: pd.DataFrame | None = None,
     ) -> pd.DataFrame:
         """Build complete feature matrix.
 
@@ -50,6 +71,13 @@ class FeaturePipeline:
         elo_df : ELO ratings from ClubELO
         xg_df : xG data from Understat
         predictions_df : Competitor predictions from Forebet etc.
+        referee_df : Referee historical stats (referee_name, yellow_cards_per_game, …)
+        manager_df : Manager tenure / win percentage data (team, career_win_pct, …)
+        wage_df : Wage bill data (team, total_wage_bill_weekly, wage_bill_rank)
+        fatigue_df : Fatigue / fixture congestion data (team, fatigue_score, …)
+        lineup_df : Lineup confirmation data (home_team, away_team, key_absences_*, …)
+        advanced_df : Advanced stats (team, xg_90, pressing_intensity, …)
+        injuries_df : Injury data — reserved for future use
 
         Returns
         -------
@@ -59,6 +87,13 @@ class FeaturePipeline:
             "elo_df": elo_df,
             "xg_df": xg_df,
             "predictions_df": predictions_df,
+            "referee_df": referee_df,
+            "manager_df": manager_df,
+            "wage_df": wage_df,
+            "fatigue_df": fatigue_df,
+            "lineup_df": lineup_df,
+            "advanced_df": advanced_df,
+            "injuries_df": injuries_df,
         }
 
         feature_frames = []

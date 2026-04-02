@@ -1,5 +1,5 @@
 """
-ScraperOrchestrator — master coordinator for all 19 SharpEdge data collectors.
+ScraperOrchestrator — master coordinator for all 31 SharpEdge data collectors.
 
 Runs collectors in priority-tiered groups, isolates failures, and returns
 structured CollectionReports.  Every public method is safe to call from the
@@ -15,27 +15,39 @@ from typing import Optional
 import pandas as pd
 
 from sharpedge.alerts.telegram import send_alert_sync
+from sharpedge.collectors.advanced_metrics import AdvancedMetricsCollector
 from sharpedge.collectors.base import BaseCollector
 from sharpedge.collectors.betexplorer import BetExplorerCollector
+from sharpedge.collectors.betfair_exchange import BetfairExchangeCollector
+from sharpedge.collectors.capology import CapologyCollector
 from sharpedge.collectors.club_elo import ClubELOCollector
 from sharpedge.collectors.crowd_sentiment import CrowdSentimentCollector
+from sharpedge.collectors.european_fatigue import EuropeanFatigueCollector
 from sharpedge.collectors.fbref import FBrefCollector
 from sharpedge.collectors.flashscore import FlashScoreCollector
 from sharpedge.collectors.football_data_org import FootballDataOrgCollector
 from sharpedge.collectors.football_data_uk import FootballDataUKCollector
 from sharpedge.collectors.footystats import FootyStatsCollector
 from sharpedge.collectors.forebet import ForebetCollector
+from sharpedge.collectors.fotmob import FotMobCollector
+from sharpedge.collectors.lineup_scraper import LineupScraper
+from sharpedge.collectors.manager_records import ManagerRecordsCollector
 from sharpedge.collectors.oddsportal import OddsPortalCollector
 from sharpedge.collectors.open_meteo import OpenMeteoCollector
 from sharpedge.collectors.prediction_aggregator import PredictionAggregator
 from sharpedge.collectors.predictz import PredictZCollector
+from sharpedge.collectors.referee_stats import RefereeStatsCollector
 from sharpedge.collectors.soccerway import SoccerwayCollector
 from sharpedge.collectors.sofascore import SofascoreCollector
+from sharpedge.collectors.team_news import TeamNewsCollector
 from sharpedge.collectors.transfermarkt import TransfermarktCollector
+from sharpedge.collectors.travel_calculator import TravelCalculator
 from sharpedge.collectors.understat import UnderstatCollector
+from sharpedge.collectors.whoscored import WhoScoredCollector
 from sharpedge.collectors.windrawwin import WinDrawWinCollector
 from sharpedge.collectors.world_football import WorldFootballCollector
 from sharpedge.config import settings
+from sharpedge.db.ingest import ingest_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +80,9 @@ class CollectionReport:
     elapsed_seconds: float = 0.0
     errors: dict = field(default_factory=dict)
 
+    # Holds the actual DataFrames keyed by source name; populated during run
+    dataframes: dict = field(default_factory=dict)
+
     # Convenience ----------------------------------------------------------
 
     @property
@@ -91,39 +106,71 @@ class CollectionReport:
 # ---------------------------------------------------------------------------
 
 class ScraperOrchestrator:
-    """Coordinates all 19 data collectors with priority-tiered execution.
+    """Coordinates all 31 data collectors with priority-tiered execution.
 
     Priorities
     ----------
-    CRITICAL  FootballDataUK, BetExplorer, Sofascore
-    HIGH      Forebet, PredictZ, WinDrawWin, OddsPortal, Transfermarkt
-    MEDIUM    FBref, Understat, ClubElo, FootyStats, FlashScore, Soccerway
-    LOW       WorldFootball, PredictionAggregator, CrowdSentiment, OpenMeteo
+    CRITICAL  FootballDataUK, BetExplorer, Sofascore, FotMob
+    HIGH      Forebet, PredictZ, WinDrawWin, OddsPortal, Transfermarkt,
+              BetfairExchange, LineupScraper
+    MEDIUM    FBref, Understat, ClubElo, FootyStats, FlashScore, Soccerway,
+              AdvancedMetrics, WhoScored
+    LOW       WorldFootball, PredictionAggregator, CrowdSentiment, OpenMeteo,
+              Capology, RefereeStats, ManagerRecords, TeamNews, EuropeanFatigue
+
+    TravelCalculator is exposed as a utility via ``self.travel_calculator``
+    and is not run as a collector.
     """
 
     def __init__(self) -> None:
-        # Instantiate all collectors once and reuse across calls
+        # ------------------------------------------------------------------
+        # CRITICAL
+        # ------------------------------------------------------------------
         self._football_data_uk = FootballDataUKCollector()
         self._betexplorer = BetExplorerCollector()
         self._sofascore = SofascoreCollector()
+        self._fotmob = FotMobCollector()
 
+        # ------------------------------------------------------------------
+        # HIGH
+        # ------------------------------------------------------------------
         self._forebet = ForebetCollector()
         self._predictz = PredictZCollector()
         self._windrawwin = WinDrawWinCollector()
         self._oddsportal = OddsPortalCollector()
         self._transfermarkt = TransfermarktCollector()
+        self._betfair_exchange = BetfairExchangeCollector()
+        self._lineup_scraper = LineupScraper()
 
+        # ------------------------------------------------------------------
+        # MEDIUM
+        # ------------------------------------------------------------------
         self._fbref = FBrefCollector()
         self._understat = UnderstatCollector()
         self._club_elo = ClubELOCollector()
         self._footystats = FootyStatsCollector()
         self._flashscore = FlashScoreCollector()
         self._soccerway = SoccerwayCollector()
+        self._advanced_metrics = AdvancedMetricsCollector()
+        self._whoscored = WhoScoredCollector()
 
+        # ------------------------------------------------------------------
+        # LOW
+        # ------------------------------------------------------------------
         self._world_football = WorldFootballCollector()
         self._prediction_aggregator = PredictionAggregator()
         self._crowd_sentiment = CrowdSentimentCollector()
         self._open_meteo = OpenMeteoCollector()
+        self._capology = CapologyCollector()
+        self._referee_stats = RefereeStatsCollector()
+        self._manager_records = ManagerRecordsCollector()
+        self._team_news = TeamNewsCollector()
+        self._european_fatigue = EuropeanFatigueCollector()
+
+        # ------------------------------------------------------------------
+        # Utility (not a collector — not in registry)
+        # ------------------------------------------------------------------
+        self.travel_calculator = TravelCalculator()
 
         # Priority-ordered registry: {priority: [(name, collector)]}
         self._registry: dict[str, list[tuple[str, BaseCollector]]] = {
@@ -131,6 +178,7 @@ class ScraperOrchestrator:
                 ("football_data_uk", self._football_data_uk),
                 ("betexplorer", self._betexplorer),
                 ("sofascore", self._sofascore),
+                ("fotmob", self._fotmob),
             ],
             PRIORITY_HIGH: [
                 ("forebet", self._forebet),
@@ -138,6 +186,8 @@ class ScraperOrchestrator:
                 ("windrawwin", self._windrawwin),
                 ("oddsportal", self._oddsportal),
                 ("transfermarkt", self._transfermarkt),
+                ("betfair_exchange", self._betfair_exchange),
+                ("lineup_scraper", self._lineup_scraper),
             ],
             PRIORITY_MEDIUM: [
                 ("fbref", self._fbref),
@@ -146,13 +196,27 @@ class ScraperOrchestrator:
                 ("footystats", self._footystats),
                 ("flashscore", self._flashscore),
                 ("soccerway", self._soccerway),
+                ("advanced_metrics", self._advanced_metrics),
+                ("whoscored", self._whoscored),
             ],
             PRIORITY_LOW: [
                 ("world_football", self._world_football),
                 ("prediction_aggregator", self._prediction_aggregator),
                 ("crowd_sentiment", self._crowd_sentiment),
                 ("open_meteo", self._open_meteo),
+                ("capology", self._capology),
+                ("referee_stats", self._referee_stats),
+                ("manager_records", self._manager_records),
+                ("team_news", self._team_news),
+                ("european_fatigue", self._european_fatigue),
             ],
+        }
+
+        # Fast lookup by source name
+        self._collector_by_name: dict[str, BaseCollector] = {
+            name: collector
+            for group in self._registry.values()
+            for name, collector in group
         }
 
         # Health tracking: {source_name: {last_success, last_rows, last_error}}
@@ -237,10 +301,12 @@ class ScraperOrchestrator:
                 report.sources_succeeded += 1
                 report.total_rows += rows
                 results[name] = df
+                report.dataframes[name] = df
             else:
                 report.sources_failed += 1
                 report.errors[name] = error
                 results[name] = pd.DataFrame()
+                report.dataframes[name] = pd.DataFrame()
 
                 if priority == PRIORITY_CRITICAL:
                     msg = (
@@ -262,7 +328,7 @@ class ScraperOrchestrator:
     def run_all(
         self, date: Optional[str | date | datetime] = None
     ) -> CollectionReport:
-        """Run all 19 collectors grouped by priority.
+        """Run all 31 collectors grouped by priority.
 
         CRITICAL failures trigger a Telegram alert but execution continues.
         No single failure can kill the run.
@@ -276,7 +342,8 @@ class ScraperOrchestrator:
         Returns
         -------
         CollectionReport
-            Comprehensive summary of the entire run.
+            Comprehensive summary of the entire run.  ``report.dataframes``
+            holds every collector's DataFrame keyed by source name.
         """
         date_str = self._resolve_date(date)
         report = CollectionReport(date=date_str)
@@ -406,7 +473,7 @@ class ScraperOrchestrator:
         Returns
         -------
         pd.DataFrame
-            Deduplicated fixture list.  A `source_count` column records how
+            Deduplicated fixture list.  A ``source_count`` column records how
             many sources confirmed each fixture.
         """
         date_str = self._resolve_date(date)
@@ -440,7 +507,7 @@ class ScraperOrchestrator:
         """Collect results from FootballDataUK, FlashScore, Soccerway, BetExplorer.
 
         A result is considered confirmed only when it appears in at least
-        two independent sources.  The `confirmed` boolean column signals this.
+        two independent sources.  The ``confirmed`` boolean column signals this.
 
         Parameters
         ----------
@@ -450,8 +517,8 @@ class ScraperOrchestrator:
         Returns
         -------
         pd.DataFrame
-            Cross-referenced results with a `confirmed` column and a
-            `source_count` column (number of sources reporting each result).
+            Cross-referenced results with a ``confirmed`` column and a
+            ``source_count`` column (number of sources reporting each result).
         """
         date_str = self._resolve_date(date)
         kwargs = {"date": date_str}
@@ -477,6 +544,168 @@ class ScraperOrchestrator:
         combined = pd.concat(frames, ignore_index=True)
         verified = self._cross_reference_results(combined)
         return verified
+
+    def run_lineup_collection(
+        self,
+        match_ids: Optional[list] = None,
+    ) -> pd.DataFrame:
+        """Collect lineups from LineupScraper and FotMob.
+
+        Both sources are queried; results are concatenated and deduplicated
+        on (match_id, team_id, player_id) where those columns exist.
+
+        Parameters
+        ----------
+        match_ids:
+            Optional list of match IDs to scope the query.  When ``None``
+            both collectors use their default behaviour (today's matches).
+
+        Returns
+        -------
+        pd.DataFrame
+            Unified lineup DataFrame (empty if both sources fail).
+        """
+        kwargs: dict = {}
+        if match_ids is not None:
+            kwargs["match_ids"] = match_ids
+
+        frames: list[pd.DataFrame] = []
+        for name, collector in [
+            ("lineup_scraper", self._lineup_scraper),
+            ("fotmob", self._fotmob),
+        ]:
+            df, error = self._run_collector(name, collector, kwargs)
+            if not df.empty:
+                df["_source"] = name
+                frames.append(df)
+
+        if not frames:
+            logger.warning("[orchestrator] run_lineup_collection: all sources failed")
+            return pd.DataFrame()
+
+        combined = pd.concat(frames, ignore_index=True)
+
+        # Deduplicate on natural key if columns exist
+        dedup_cols = [c for c in ("match_id", "team_id", "player_id") if c in combined.columns]
+        if dedup_cols:
+            combined = combined.drop_duplicates(subset=dedup_cols, keep="first")
+
+        return combined.drop(columns=["_source"], errors="ignore")
+
+    def run_intelligence_collection(self) -> dict[str, pd.DataFrame]:
+        """Collect contextual intelligence from enrichment sources.
+
+        Sources queried (all LOW-priority):
+          - referee_stats
+          - manager_records
+          - capology (wages)
+          - team_news
+          - european_fatigue
+          - advanced_metrics
+          - whoscored
+          - crowd_sentiment
+
+        No date argument: these sources are typically not date-scoped.
+
+        Returns
+        -------
+        dict[str, pd.DataFrame]
+            Mapping of source_name → DataFrame.  Failed sources map to an
+            empty DataFrame so callers can always iterate safely.
+        """
+        intelligence_collectors: list[tuple[str, BaseCollector]] = [
+            ("referee_stats", self._referee_stats),
+            ("manager_records", self._manager_records),
+            ("capology", self._capology),
+            ("team_news", self._team_news),
+            ("european_fatigue", self._european_fatigue),
+            ("advanced_metrics", self._advanced_metrics),
+            ("whoscored", self._whoscored),
+            ("crowd_sentiment", self._crowd_sentiment),
+        ]
+
+        results: dict[str, pd.DataFrame] = {}
+        for name, collector in intelligence_collectors:
+            df, error = self._run_collector(name, collector, {})
+            results[name] = df if df is not None else pd.DataFrame()
+
+        succeeded = sum(1 for df in results.values() if not df.empty)
+        logger.info(
+            f"[orchestrator] run_intelligence_collection complete: "
+            f"{succeeded}/{len(intelligence_collectors)} sources OK"
+        )
+        return results
+
+    def run_exchange_collection(
+        self, date: Optional[str | date | datetime] = None
+    ) -> pd.DataFrame:
+        """Collect Betfair exchange odds.
+
+        Parameters
+        ----------
+        date:
+            Target date. Defaults to today UTC.
+
+        Returns
+        -------
+        pd.DataFrame
+            Exchange odds DataFrame (empty on failure).
+        """
+        date_str = self._resolve_date(date)
+        kwargs = {"date": date_str}
+
+        df, error = self._run_collector("betfair_exchange", self._betfair_exchange, kwargs)
+        if error:
+            logger.warning(f"[orchestrator] run_exchange_collection failed: {error}")
+            return pd.DataFrame()
+        return df
+
+    def ingest_all(self, collection_report: CollectionReport) -> dict:
+        """Persist every DataFrame in *collection_report* to the database.
+
+        Iterates ``collection_report.dataframes`` and calls
+        ``ingest_dataframe(df, source_name)`` for each non-empty frame.
+
+        Parameters
+        ----------
+        collection_report:
+            The CollectionReport returned by ``run_all()``.  Its
+            ``dataframes`` dict must be populated (it is when produced by
+            this class).
+
+        Returns
+        -------
+        dict
+            Summary mapping source_name → {"rows_inserted": int, "error": str|None}.
+        """
+        summary: dict[str, dict] = {}
+
+        for source_name, df in collection_report.dataframes.items():
+            if df is None or df.empty:
+                summary[source_name] = {"rows_inserted": 0, "error": None}
+                continue
+
+            try:
+                rows_inserted = ingest_dataframe(df, source_name)
+                summary[source_name] = {"rows_inserted": rows_inserted, "error": None}
+                logger.info(
+                    f"[orchestrator] ingest_all: {source_name} → {rows_inserted} rows"
+                )
+            except Exception as exc:
+                error_str = f"{type(exc).__name__}: {exc}"
+                logger.error(
+                    f"[orchestrator] ingest_all: {source_name} FAILED: {error_str}"
+                )
+                summary[source_name] = {"rows_inserted": 0, "error": error_str}
+
+        total_inserted = sum(v["rows_inserted"] for v in summary.values())
+        total_failed = sum(1 for v in summary.values() if v["error"])
+        logger.info(
+            f"[orchestrator] ingest_all complete: "
+            f"{total_inserted} total rows inserted, "
+            f"{total_failed} sources failed"
+        )
+        return summary
 
     def get_health(self) -> dict:
         """Return health status for every collector.
@@ -649,7 +878,7 @@ class ScraperOrchestrator:
         """Deduplicate fixtures by normalised match key.
 
         Collapses rows for the same fixture into one, preserving all
-        non-null fields from any source.  Adds `source_count` column.
+        non-null fields from any source.  Adds ``source_count`` column.
         """
         if df.empty:
             return df
