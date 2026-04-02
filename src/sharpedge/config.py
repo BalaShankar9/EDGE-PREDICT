@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     pipeline_run_hour: int = 8  # Run daily pipeline at 8 AM UTC
     result_check_delay_hours: int = 3  # Check results 3h after last kickoff
 
+    # --- Supabase ---
+    supabase_url: str = ""  # e.g. https://xxx.supabase.co
+    supabase_key: str = ""  # anon or service_role key
+    supabase_project_ref: str = ""  # project reference ID
+    supabase_db_password: str = ""  # direct DB password
+    supabase_region: str = "us-east-1"  # AWS region
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 
