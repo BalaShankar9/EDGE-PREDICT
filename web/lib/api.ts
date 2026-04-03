@@ -27,6 +27,10 @@ export async function getPredictionsToday(): Promise<Prediction[]> {
   return fetchApi<Prediction[]>("/api/predictions/today");
 }
 
+export async function getPredictionsUpcoming(days: number = 7): Promise<Prediction[]> {
+  return fetchApi<Prediction[]>(`/api/predictions/upcoming?days=${days}`);
+}
+
 export async function getPredictionsByDate(date: string): Promise<Prediction[]> {
   return fetchApi<Prediction[]>(`/api/predictions/${date}`);
 }
