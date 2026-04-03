@@ -15,3 +15,12 @@ data/cache/
 mlruns/
 models/
 !src/**/models/
+.claude/
+web/.netlify/
+__pycache__/
+*.pyc
+*.log
+*.pkl
+models/
+live_picks.json
+optimization_results*.json
