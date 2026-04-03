@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     supabase_db_password: str = ""  # direct DB password
     supabase_region: str = "us-east-1"  # AWS region
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

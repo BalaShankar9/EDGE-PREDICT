@@ -62,19 +62,23 @@ class TestTabPFNAgentPredict:
 
     def test_fit_graceful_when_tabpfn_unavailable(self, agent):
         """If TabPFN is not installed, fit should not raise."""
-        with mock.patch.dict("sys.modules", {"tabpfn": None}):
-            # Force ImportError by patching the import
-            with mock.patch(
-                "builtins.__import__",
-                side_effect=lambda name, *args, **kwargs: (
-                    (_ for _ in ()).throw(ImportError("No module named 'tabpfn'"))
-                    if name == "tabpfn"
-                    else mock.DEFAULT
-                ),
-            ):
-                result = agent.fit(np.random.randn(50, 5), np.array(["H"] * 50))
-                assert result is agent
-                assert agent._fitted is False
+        import logging
+        logging.disable(logging.CRITICAL)
+        try:
+            with mock.patch.dict("sys.modules", {"tabpfn": None}):
+                with mock.patch(
+                    "builtins.__import__",
+                    side_effect=lambda name, *args, **kwargs: (
+                        (_ for _ in ()).throw(ImportError("No module named 'tabpfn'"))
+                        if name == "tabpfn"
+                        else mock.DEFAULT
+                    ),
+                ):
+                    result = agent.fit(np.random.randn(50, 5), np.array(["H"] * 50))
+                    assert result is agent
+                    assert agent._fitted is False
+        finally:
+            logging.disable(logging.NOTSET)
 
     def test_fit_and_predict_with_mock_model(self, agent, match_context):
         """Test fit+predict using a mock TabPFN model."""

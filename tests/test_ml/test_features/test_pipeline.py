@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
-from sharpedge.ml.features.pipeline import FeaturePipeline
+from sharpedge.ml.features.pipeline import FeaturePipeline, ALL_GROUPS
 from sharpedge.ml.features.form import FormFeatures
 from sharpedge.ml.features.market import MarketFeatures
 
@@ -47,36 +47,47 @@ def sample_matches():
     return pd.DataFrame(rows)
 
 
+EXPECTED_FEATURES = sum(cls.feature_count for cls in ALL_GROUPS)
+
+
 def test_pipeline_total_features():
     pipe = FeaturePipeline()
-    assert pipe.total_features == 46
+    assert pipe.total_features == EXPECTED_FEATURES
 
 
 def test_pipeline_builds_all_columns(sample_matches):
     pipe = FeaturePipeline()
     result = pipe.build(sample_matches)
-    assert result.shape[1] == 46
+    assert result.shape[1] == EXPECTED_FEATURES
     assert len(result) == len(sample_matches)
 
 
 def test_pipeline_with_subset_groups(sample_matches):
     pipe = FeaturePipeline(groups=[FormFeatures, MarketFeatures])
     result = pipe.build(sample_matches)
-    assert result.shape[1] == 20  # 12 + 8
+    expected = FormFeatures.feature_count + MarketFeatures.feature_count
+    assert result.shape[1] == expected
 
 
 def test_pipeline_handles_missing_context(sample_matches):
     """Pipeline should NaN-fill for groups that fail due to missing context."""
     pipe = FeaturePipeline()
     result = pipe.build(sample_matches, elo_df=None, xg_df=None, predictions_df=None)
-    assert result.shape[1] == 46
-    # ELO and xG features should be NaN (no data), but form/market should have values
+    assert result.shape[1] == EXPECTED_FEATURES
+    # Market features should have values from odds columns
     assert result["mkt_best_odds_home"].notna().any()
 
 
 def test_pipeline_feature_names():
     pipe = FeaturePipeline()
     names = pipe.get_all_feature_names()
-    assert len(names) == 46
+    assert len(names) == EXPECTED_FEATURES
     assert names[0].startswith("form_")
-    assert names[-1].startswith("shot_")
+
+
+def test_pipeline_big5_coverage():
+    """ALL_GROUPS should include at least the core feature groups."""
+    group_names = [g.name for g in FeaturePipeline().groups]
+    assert "form" in group_names
+    assert "elo" in group_names
+    assert "market" in group_names

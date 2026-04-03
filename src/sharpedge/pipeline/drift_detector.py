@@ -16,7 +16,8 @@ from typing import Optional
 from sharpedge.config import settings
 from sharpedge.db.engine import get_session
 from sharpedge.db.models import AgentPerformance, DailyPick, DriftSnapshot
-from sharpedge.warroom.retrainer import AutoRetrainer
+# Lazy import to avoid circular dependency with warroom
+# from sharpedge.warroom.retrainer import AutoRetrainer
 
 logger = logging.getLogger(__name__)
 
@@ -403,6 +404,7 @@ class DriftDetector:
             )
 
         # --- Schedule check (fallback) ---
+        from sharpedge.warroom.retrainer import AutoRetrainer
         retrainer = AutoRetrainer()
         retrainer.register_sport(sport_slug)
         if retrainer.check_due(sport_slug):
@@ -466,10 +468,11 @@ class DriftDetector:
 # ---------------------------------------------------------------------------
 
 
-class SmartRetrainer(AutoRetrainer):
+class SmartRetrainer:
     """Schedule-aware retrainer augmented with drift-based emergency triggering.
 
-    Inherits schedule management from :class:`AutoRetrainer` and adds:
+    Uses :class:`~sharpedge.warroom.retrainer.AutoRetrainer` for schedule management
+    and adds:
     - Drift-based emergency triggering via :class:`DriftDetector`
     - ``check_and_retrain`` — unified decision + action method
     - ``execute_retrain``    — lightweight placeholder that logs a
@@ -478,7 +481,8 @@ class SmartRetrainer(AutoRetrainer):
     """
 
     def __init__(self) -> None:
-        super().__init__()
+        from sharpedge.warroom.retrainer import AutoRetrainer
+        self._retrainer = AutoRetrainer()
         self.detector = DriftDetector()
         self._pending_requests: list[RetrainRequest] = []
 

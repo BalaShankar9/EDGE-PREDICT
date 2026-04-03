@@ -26,7 +26,7 @@ def test_market_features_shape(sample_odds_matches):
     mf = MarketFeatures()
     result = mf.compute(sample_odds_matches)
     assert len(result) == 2
-    assert result.shape[1] == 8
+    assert result.shape[1] == mf.feature_count
 
 
 def test_market_overround(sample_odds_matches):
@@ -44,5 +44,5 @@ def test_market_best_odds(sample_odds_matches):
 
 def test_market_feature_metadata():
     mf = MarketFeatures()
-    assert mf.feature_count == 8
+    assert mf.feature_count == 20  # 11 original + 6 smart money + 3 goto
     assert mf.name == "market"

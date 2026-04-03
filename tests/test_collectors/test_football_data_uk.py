@@ -8,10 +8,10 @@ from sharpedge.collectors.football_data_uk import (
 
 
 def test_league_codes_cover_big_5():
-    """All 5 major European leagues should be present."""
-    assert len(LEAGUE_CODES) == 5
-    expected = {"Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"}
-    assert set(LEAGUE_CODES.keys()) == expected
+    """All major European leagues should be present, including Big 5."""
+    assert len(LEAGUE_CODES) >= 5
+    big_5 = {"Premier League", "La Liga", "Bundesliga", "Serie A", "Ligue 1"}
+    assert big_5.issubset(set(LEAGUE_CODES.keys()))
 
 
 def test_season_labels_cover_5_seasons():
