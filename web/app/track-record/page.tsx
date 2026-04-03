@@ -33,7 +33,7 @@ export default async function TrackRecordPage() {
     // Graceful degradation
   }
 
-  if (!trackRecord) {
+  if (!trackRecord || !trackRecord.overall) {
     return (
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
@@ -64,18 +64,18 @@ export default async function TrackRecordPage() {
       <StatsHero record={trackRecord} />
 
       {/* Streak info */}
-      {(trackRecord.longest_win_streak > 0 || trackRecord.longest_loss_streak > 0) && (
+      {(trackRecord.overall.longest_win_streak > 0 || trackRecord.overall.longest_loss_streak > 0) && (
         <div className="flex flex-wrap gap-4 mt-6 justify-center">
-          {trackRecord.longest_win_streak > 0 && (
+          {trackRecord.overall.longest_win_streak > 0 && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-success/5 border border-success/20 text-sm">
               <span>&#128293;</span>
-              <span className="text-success font-semibold">{trackRecord.longest_win_streak}W</span>
+              <span className="text-success font-semibold">{trackRecord.overall.longest_win_streak}W</span>
               <span className="text-text-secondary">best streak</span>
             </div>
           )}
-          {trackRecord.longest_loss_streak > 0 && (
+          {trackRecord.overall.longest_loss_streak > 0 && (
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-bg-surface border border-border text-sm">
-              <span className="text-danger font-semibold">{trackRecord.longest_loss_streak}L</span>
+              <span className="text-danger font-semibold">{trackRecord.overall.longest_loss_streak}L</span>
               <span className="text-text-secondary">worst streak</span>
             </div>
           )}
